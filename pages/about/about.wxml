@@ -1,0 +1,35 @@
+<view class="container">
+  <view class="about-card">
+    <view class="app-name">图片压缩工具</view>
+    <view class="app-version">版本 1.0.0</view>
+
+    <view class="section">
+      <view class="section-title">关于我们</view>
+      <view class="section-content">
+        这是一款免费的图片压缩工具，帮助你在不明显损失画质的前提下，减少图片文件体积，更快分享到微信、发送邮件或节省手机存储空间。
+      </view>
+    </view>
+
+    <view class="section">
+      <view class="section-title">核心功能</view>
+      <view class="feature-item">✓ 按质量压缩：自由调节压缩比例</view>
+      <view class="feature-item">✓ 按大小压缩：自动调整到目标文件大小</view>
+      <view class="feature-item">✓ HEIC/PNG 自动转 JPG 格式</view>
+      <view class="feature-item">✓ 所有图片本地处理，不上传服务器</view>
+    </view>
+
+    <view class="section">
+      <view class="section-title">隐私保护</view>
+      <view class="section-content">
+        我们非常重视你的隐私安全。所有图片压缩处理均在你的手机本地完成，不会上传到任何服务器，也不会收集你的任何个人信息。
+      </view>
+    </view>
+
+    <view class="section">
+      <view class="section-title">意见反馈</view>
+      <view class="section-content">
+        如果使用过程中遇到问题，或者有功能建议，欢迎通过小程序右上角「...」→「反馈与意见」告诉我们。
+      </view>
+    </view>
+  </view>
+</view>

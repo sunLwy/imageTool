@@ -1,0 +1,47 @@
+.container {
+  padding: 32rpx;
+}
+
+.about-card {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 40rpx 32rpx;
+}
+
+.app-name {
+  font-size: 40rpx;
+  font-weight: 600;
+  text-align: center;
+  color: #1a1a1a;
+}
+
+.app-version {
+  font-size: 24rpx;
+  color: #999;
+  text-align: center;
+  margin-top: 8rpx;
+  margin-bottom: 40rpx;
+}
+
+.section {
+  margin-bottom: 32rpx;
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 16rpx;
+}
+
+.section-content {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.8;
+}
+
+.feature-item {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 2;
+}
