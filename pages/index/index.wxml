@@ -99,13 +99,13 @@
     <view class="modal-content">
       <view class="modal-title">隐私保护说明</view>
       <view class="modal-body">
-        欢迎使用图片压缩工具。我们非常重视您的隐私：
-        {'\n\n'}
-        1. 您选择的图片仅在您的手机本地进行压缩处理，不会上传到任何服务器。
-        {'\n'}
-        2. 我们需要访问您的相册来选择图片，以及保存压缩后的图片到您的相册。
-        {'\n'}
-        3. 我们不会收集、存储或分享您的任何个人信息或图片内容。
+        <view>欢迎使用小胡轻图。我们非常重视您的隐私：</view>
+        <view style="height: 20rpx;"></view>
+        <view>1. 您选择的图片仅在您的手机本地进行压缩处理，不会上传到任何服务器。</view>
+        <view style="height: 16rpx;"></view>
+        <view>2. 我们需要访问您的相册来选择图片，以及保存压缩后的图片到您的相册。</view>
+        <view style="height: 16rpx;"></view>
+        <view>3. 我们不会收集、存储或分享您的任何个人信息或图片内容。</view>
       </view>
       <view class="modal-btns">
         <button class="modal-btn-cancel" bindtap="rejectPrivacy">不同意</button>

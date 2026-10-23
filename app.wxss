@@ -34,6 +34,11 @@ page {
   border: 2rpx solid #4f7cff;
   border-radius: 48rpx;
   font-size: 30rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  padding: 0 32rpx;
 }
 
 .btn-outline::after {
