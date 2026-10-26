@@ -1,103 +1,20 @@
 <view class="container">
-  <!-- 工具入口宫格 -->
-  <view class="tool-grid">
-    <view class="tool-cell active">
-      <view class="tool-icon">🗜️</view>
-      <view class="tool-name">图片压缩</view>
-    </view>
-    <view class="tool-cell" bindtap="goCrop">
-      <view class="tool-icon">✂️</view>
-      <view class="tool-name">裁剪旋转</view>
+  <!-- 工具宫格 -->
+  <view class="grid">
+    <view class="grid-cell" wx:for="{{tools}}" wx:key="key"
+      bindtap="openTool" data-url="{{item.url}}">
+      <view class="cell-icon">{{item.icon}}</view>
+      <view class="cell-name">{{item.name}}</view>
+      <view class="cell-desc">{{item.desc}}</view>
     </view>
   </view>
 
-  <!-- 选图区域 -->
-  <view class="upload-area" bindtap="chooseImage" wx:if="{{!originalPath}}">
-    <view class="upload-icon">+</view>
-    <view class="upload-text">点击选择图片</view>
-    <view class="upload-tip">支持 JPG / PNG / HEIC</view>
+  <!-- 说明 -->
+  <view class="home-note">
+    <view class="note-item">✓ 所有图片均在手机本地处理，不上传服务器</view>
+    <view class="note-item">✓ 支持 JPG / PNG / HEIC，免费使用</view>
   </view>
 
-  <!-- 已选图：原图信息（压缩完成后隐藏，只显示结果） -->
-  <view class="image-card" wx:if="{{originalPath && !compressedPath}}">
-    <image src="{{originalPath}}" mode="aspectFit" class="preview-image" />
-    <view class="info-row">
-      <text class="info-label">原图</text>
-      <text class="info-value">{{originalSize}} · {{originalWidth}}×{{originalHeight}}</text>
-    </view>
-
-    <!-- 压缩模式切换 -->
-    <view class="mode-tabs">
-      <view class="mode-tab {{compressMode === 'quality' ? 'active' : ''}}" bindtap="switchMode" data-mode="quality">按质量</view>
-      <view class="mode-tab {{compressMode === 'targetSize' ? 'active' : ''}}" bindtap="switchMode" data-mode="targetSize">按大小</view>
-    </view>
-
-    <!-- 按质量模式：滑条 -->
-    <view class="slider-row" wx:if="{{compressMode === 'quality'}}">
-      <view class="slider-header">
-        <text class="slider-label">压缩质量</text>
-        <text class="slider-value">{{quality}}%</text>
-      </view>
-      <slider min="10" max="100" value="{{quality}}" activeColor="#4f7cff" block-size="20" bindchange="onQualityChange" />
-    </view>
-    <view class="slider-tip" wx:if="{{compressMode === 'quality'}}">质量越高越清晰，文件越大</view>
-
-    <!-- 按大小模式：预设大小 -->
-    <view class="size-preset" wx:if="{{compressMode === 'targetSize'}}">
-      <view class="size-option {{targetSize === 200 ? 'active' : ''}}" bindtap="selectSize" data-size="200">200KB</view>
-      <view class="size-option {{targetSize === 500 ? 'active' : ''}}" bindtap="selectSize" data-size="500">500KB</view>
-      <view class="size-option {{targetSize === 1024 ? 'active' : ''}}" bindtap="selectSize" data-size="1024">1MB</view>
-      <view class="size-option {{targetSize === 2048 ? 'active' : ''}}" bindtap="selectSize" data-size="2048">2MB</view>
-    </view>
-    <view class="custom-size-row" wx:if="{{compressMode === 'targetSize'}}">
-      <input class="custom-size-input" type="number" placeholder="自定义大小(KB)" value="{{customSize}}" bindinput="onCustomSizeInput" />
-      <text class="custom-size-unit">KB</text>
-    </view>
-    <view class="slider-tip" wx:if="{{compressMode === 'targetSize'}}">自动调整质量，压缩到目标大小以内</view>
-
-    <!-- 压缩按钮 -->
-    <button class="btn-primary compress-btn" bindtap="compressImage" loading="{{compressing}}" disabled="{{compressing}}">
-      {{compressing ? '压缩中...' : '立即压缩'}}
-    </button>
-
-    <!-- 重新选图 -->
-    <view class="reselect" bindtap="chooseImage">重新选择</view>
-  </view>
-
-  <!-- 压缩结果 -->
-  <view class="image-card result-card" wx:if="{{compressedPath}}">
-    <view class="result-badge">压缩完成</view>
-    <image src="{{compressedPath}}" mode="aspectFit" class="preview-image" />
-    <view class="info-row">
-      <text class="info-label">压缩后</text>
-      <text class="info-value">{{compressedSize}} · {{compressedWidth}}×{{compressedHeight}}</text>
-    </view>
-    <view class="saving-info" wx:if="{{savingPercent > 0}}">
-      节省了 {{savingPercent}}% 空间
-    </view>
-
-    <button class="btn-primary save-btn" bindtap="saveImage" loading="{{saving}}" disabled="{{saving}}">
-      {{saving ? '保存中...' : '保存到相册'}}
-    </button>
-
-    <button class="btn-outline recompress-btn" bindtap="resetResult">调整参数重新压缩</button>
-  </view>
-
-  <!-- 功能介绍（增加页面丰富度，降低"功能过于简单"被拒概率） -->
-  <view class="feature-card">
-    <view class="feature-title">这个工具箱能做什么</view>
-    <view class="feature-item">✓ 图片压缩：按质量或指定大小自动压缩</view>
-    <view class="feature-item">✓ 裁剪旋转：自由裁剪、常用比例、旋转90°</view>
-    <view class="feature-item">✓ HEIC/PNG 自动转 JPG 格式</view>
-    <view class="feature-item">✓ 所有处理本地完成，不上传服务器</view>
-  </view>
-
-  <!-- 隐私说明 -->
-  <view class="privacy-tip">
-    所有图片均在您的手机本地处理，不会上传到任何服务器。
-  </view>
-
-  <!-- 关于入口 -->
   <view class="about-link" bindtap="goAbout">关于我们</view>
 
   <!-- 隐私协议弹窗 -->
@@ -107,9 +24,9 @@
       <view class="modal-body">
         <view>欢迎使用小胡轻图。我们非常重视您的隐私：</view>
         <view style="height: 20rpx;"></view>
-        <view>1. 您选择的图片仅在您的手机本地进行压缩处理，不会上传到任何服务器。</view>
+        <view>1. 您选择的图片仅在您的手机本地进行压缩、裁剪处理，不会上传到任何服务器。</view>
         <view style="height: 16rpx;"></view>
-        <view>2. 我们需要访问您的相册来选择图片，以及保存压缩后的图片到您的相册。</view>
+        <view>2. 我们需要访问您的相册来选择图片，以及保存处理后的图片到您的相册。</view>
         <view style="height: 16rpx;"></view>
         <view>3. 我们不会收集、存储或分享您的任何个人信息或图片内容。</view>
       </view>

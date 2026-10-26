@@ -31,18 +31,22 @@
   border-radius: 24rpx;
   overflow: hidden;
   margin: 8rpx auto 0;
+  touch-action: none;
 }
-.crop-area {
+/* 可拖动缩放的图片层（自定义手势，绝对定位） */
+.img-wrap {
   position: absolute;
-  overflow: hidden;
+  transform-origin: center center;
+  will-change: transform;
+  z-index: 10;
 }
-.crop-movable {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.img-wrap.is-anim {
+  transition: transform 0.22s ease-out;
 }
 .crop-image {
-  flex-shrink: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 /* 裁剪框：遮罩 + 边框 */

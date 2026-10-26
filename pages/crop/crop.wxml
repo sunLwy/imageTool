@@ -9,19 +9,16 @@
   <!-- 裁剪编辑器（普通页面流，保留小程序导航栏） -->
   <block wx:if="{{hasImage && !resultPath}}">
     <!-- 黑底裁剪舞台 -->
-    <view class="crop-stage" style="width:{{areaW}}px;height:{{areaW}}px;">
-      <movable-area class="crop-area"
-        style="width:{{bigSize}}px;height:{{bigSize}}px;left:{{bigOffset}}px;top:{{bigOffset}}px;">
-        <movable-view class="crop-movable" direction="all"
-          x="{{movableX}}" y="{{movableY}}"
-          scale scale-min="1" scale-max="5"
-          bindchange="onMove" bindscale="onScale"
-          bindtouchend="onTouchEnd" bindtouchcancel="onTouchEnd"
-          style="width:{{imgW}}px;height:{{imgH}}px;">
-          <image src="{{src}}" class="crop-image" mode="scaleToFill"
-            style="width:{{imgW}}px;height:{{imgH}}px;" />
-        </movable-view>
-      </movable-area>
+    <view class="crop-stage" style="width:{{areaW}}px;height:{{areaW}}px;"
+      catchtouchstart="onTouchStart"
+      catchtouchmove="onTouchMove"
+      catchtouchend="onTouchEnd"
+      catchtouchcancel="onTouchEnd">
+      <view class="img-wrap {{animating ? 'is-anim' : ''}}"
+        style="width:{{imgW}}px;height:{{imgH}}px;left:{{imgLeft}}px;top:{{imgTop}}px;transform:translate({{tx}}px,{{ty}}px) scale({{scale}});">
+        <image src="{{src}}" class="crop-image" mode="scaleToFill"
+          style="width:{{imgW}}px;height:{{imgH}}px;" />
+      </view>
 
       <!-- 裁剪框：半透明遮罩 + 四角 L 标 + 三分网格 -->
       <view class="crop-frame"

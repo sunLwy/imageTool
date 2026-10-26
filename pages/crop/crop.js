@@ -5,21 +5,25 @@ Page({
     originW: 0,   // 原图宽（px）
     originH: 0,   // 原图高（px）
 
-    // 裁剪框尺寸（屏幕 px）——舞台为正方形，裁剪框在其中居中
+    // 裁剪舞台（正方形）与裁剪框（屏幕 px）
     areaW: 0,
     areaH: 0,
-    bigSize: 0,    // 扩大的可拖动区域（3倍舞台）
-    bigOffset: 0,  // 大区域相对舞台的偏移（负值）
     frameW: 0,
     frameH: 0,
     frameLeft: 0,
     frameTop: 0,
 
-    // movable-view 内图片尺寸与位置
+    // 图片 cover 裁剪框后的尺寸与初始左上角
     imgW: 0,
     imgH: 0,
-    movableX: 0,
-    movableY: 0,
+    imgLeft: 0,
+    imgTop: 0,
+
+    // 自定义手势变换：相对初始中心的位移 + 缩放
+    tx: 0,
+    ty: 0,
+    scale: 1,
+    animating: false,
 
     // 比例（iPhone 照片风格，横屏在前）
     ratio: 'free',
@@ -40,6 +44,9 @@ Page({
 
   // 图片 cover 适配裁剪框时的缩放系数（导出坐标映射用）
   scale0: 0,
+  stageCx: 0,   // 舞台中心屏幕坐标
+  stageCy: 0,
+  gesture: null,
 
   onLoad() {
     const win = wx.getWindowInfo()
@@ -47,12 +54,7 @@ Page({
     const paddingPx = 32 * win.windowWidth / 750
     const stage = win.windowWidth - paddingPx * 2
     this.stageSize = stage
-    // 可拖动区域放大 3 倍并居中，四周各扩出一个舞台，保证图片边缘能拖到裁剪框
-    const bigSize = stage * 3
-    const bigOffset = (stage - bigSize) / 2
-    this.bigSize = bigSize
-    this.bigOffset = bigOffset
-    this.setData({ areaW: stage, areaH: stage, bigSize, bigOffset })
+    this.setData({ areaW: stage, areaH: stage })
   },
 
   // ============ 选图 ============
@@ -93,6 +95,18 @@ Page({
       resultPath: ''
     })
     this.layoutCrop()
+    // 渲染后取舞台中心屏幕坐标，用于双指缩放锚点计算
+    wx.nextTick(() => {
+      wx.createSelectorQuery().in(this)
+        .select('.crop-stage')
+        .boundingClientRect((rect) => {
+          if (rect) {
+            this.stageCx = rect.left + rect.width / 2
+            this.stageCy = rect.top + rect.height / 2
+          }
+        })
+        .exec()
+    })
   },
 
   // 非 JPG 转 JPG（离屏 Canvas，透明区域铺白底）
@@ -146,85 +160,108 @@ Page({
     const scale0 = Math.max(frameW / originW, frameH / originH)
     const imgW = originW * scale0
     const imgH = originH * scale0
-    // 裁剪框在扩大区域中的坐标（扩大区域左上角相对舞台为 bigOffset）
-    const fx = frameLeft - this.bigOffset
-    const fy = frameTop - this.bigOffset
-    // 图片初始在裁剪框内居中（大区域坐标）
-    const movableX = fx + (frameW - imgW) / 2
-    const movableY = fy + (frameH - imgH) / 2
+    // 图片初始左上角，使其在裁剪框内居中（后续位移/缩放用 transform 叠加）
+    const imgLeft = frameLeft + (frameW - imgW) / 2
+    const imgTop = frameTop + (frameH - imgH) / 2
 
     this.scale0 = scale0
     this.frameLeft = frameLeft
     this.frameTop = frameTop
     this.frameW = frameW
     this.frameH = frameH
-    this.fx = fx
-    this.fy = fy
-    this.curScale = 1
-    this.curX = movableX
-    this.curY = movableY
+    this.gesture = null
     this.setData({
       frameW, frameH, frameLeft, frameTop,
-      imgW, imgH, movableX, movableY
+      imgW, imgH, imgLeft, imgTop,
+      tx: 0, ty: 0, scale: 1, animating: false
     })
   },
 
-  // 当前双指缩放倍数与位置（手势期间只读取，绝不 setData 回写，否则会闪烁回弹）
-  curScale: 1,
-  curX: 0,
-  curY: 0,
+  // ============ 自定义手势（单指拖动 + 双指缩放） ============
+  onTouchStart(e) {
+    this.setData({ animating: false })
+    const t = e.touches
+    const { tx, ty, scale } = this.data
 
-  onMove(e) {
-    this.curX = e.detail.x
-    this.curY = e.detail.y
+    if (t.length === 1) {
+      this.gesture = {
+        mode: 'pan',
+        x0: t[0].clientX,
+        y0: t[0].clientY,
+        tx0: tx,
+        ty0: ty
+      }
+    } else if (t.length === 2) {
+      this.gesture = this.buildPinch(t, tx, ty, scale)
+    }
   },
 
-  onScale(e) {
-    this.curScale = e.detail.scale
-    this.curX = e.detail.x
-    this.curY = e.detail.y
+  onTouchMove(e) {
+    const t = e.touches
+    let g = this.gesture
+
+    if (t.length === 1 && g && g.mode === 'pan') {
+      this.setData({
+        tx: g.tx0 + (t[0].clientX - g.x0),
+        ty: g.ty0 + (t[0].clientY - g.y0)
+      })
+    } else if (t.length === 2) {
+      // 单指拖动过程中第二指落下，切换为缩放
+      if (!g || g.mode !== 'pinch') {
+        this.gesture = this.buildPinch(t, this.data.tx, this.data.ty, this.data.scale)
+        return
+      }
+      const dist = this.getDist(t)
+      const mid = this.getMid(t)
+      let ns = g.scale0 * (dist / g.dist0)
+      ns = Math.min(5, Math.max(1, ns))
+      const k = ns / g.scale0
+      // 以当前双指中点为锚点缩放
+      const tx = mid.x - (mid.x - g.tx0) * k
+      const ty = mid.y - (mid.y - g.ty0) * k
+      this.setData({ scale: ns, tx, ty })
+    }
   },
 
-  // 松手后自动吸附，保证图片始终铺满裁剪框、不露黑边
   onTouchEnd() {
-    // 延迟一帧，等双指缩放的最终 scale 落定
-    setTimeout(() => this.snapToFrame(), 0)
+    // 松手吸附：保证图片始终铺满裁剪框、不露黑边
+    const { scale, tx, ty, imgW, imgH } = this.data
+    const { frameW, frameH } = this
+    const halfW = imgW * scale / 2
+    const halfH = imgH * scale / 2
+    // 中心位移允许范围（相对裁剪框中心）
+    const minTx = frameW / 2 - halfW
+    const maxTx = halfW - frameW / 2
+    const minTy = frameH / 2 - halfH
+    const maxTy = halfH - frameH / 2
+    const ntx = Math.max(minTx, Math.min(tx, maxTx))
+    const nty = Math.max(minTy, Math.min(ty, maxTy))
+
+    this.setData({ animating: true, tx: ntx, ty: nty })
   },
 
-  snapToFrame() {
-    const { imgW, imgH } = this.data
-    const { fx, fy, frameW, frameH } = this
-    const s = this.curScale || 1
-    const halfW = imgW * (s - 1) / 2
-    const halfH = imgH * (s - 1) / 2
-    const visW = imgW * s
-    const visH = imgH * s
-
-    // 视觉左上角（大区域坐标，含中心锚点缩放修正）
-    let visLeft = this.curX - halfW
-    let visTop = this.curY - halfH
-
-    // 水平约束：图片不得窄于裁剪框
-    if (visW >= frameW) {
-      visLeft = Math.min(visLeft, fx)
-      visLeft = Math.max(visLeft, fx + frameW - visW)
-    } else {
-      visLeft = fx + (frameW - visW) / 2
+  buildPinch(t, tx, ty, scale) {
+    return {
+      mode: 'pinch',
+      dist0: this.getDist(t),
+      tx0: tx,
+      ty0: ty,
+      scale0: scale
     }
-    // 垂直约束
-    if (visH >= frameH) {
-      visTop = Math.min(visTop, fy)
-      visTop = Math.max(visTop, fy + frameH - visH)
-    } else {
-      visTop = fy + (frameH - visH) / 2
-    }
+  },
 
-    // 转回 movable-view 的 x/y 并吸附回去
-    const targetX = visLeft + halfW
-    const targetY = visTop + halfH
-    this.curX = targetX
-    this.curY = targetY
-    this.setData({ movableX: targetX, movableY: targetY })
+  getDist(t) {
+    const dx = t[0].clientX - t[1].clientX
+    const dy = t[0].clientY - t[1].clientY
+    return Math.hypot(dx, dy)
+  },
+
+  getMid(t) {
+    // 中点换算为相对舞台中心的坐标
+    return {
+      x: (t[0].clientX + t[1].clientX) / 2 - this.stageCx,
+      y: (t[0].clientY + t[1].clientY) / 2 - this.stageCy
+    }
   },
 
   selectRatio(e) {
@@ -295,18 +332,15 @@ Page({
   doCrop() {
     this.setData({ cropping: true })
 
-    const { imgW, imgH } = this.data
-    const { fx, fy, frameW, frameH, scale0 } = this
-    const s = this.curScale || 1   // 双指缩放倍数
+    const { imgW, imgH, tx, ty, scale } = this.data
+    const { frameW, frameH, scale0 } = this
 
-    // movable-view 以中心为锚点缩放，视觉左上角要做修正（大区域坐标）
-    const visLeftX = this.curX - imgW * (s - 1) / 2
-    const visLeftY = this.curY - imgH * (s - 1) / 2
-
+    // 图片中心相对裁剪框中心偏移 (tx,ty)，视觉左上角（裁剪框坐标系）：
+    //   frameW/2 - imgW*scale/2 + tx
     // 裁剪框左上角相对图片视觉左上角，再换算回原图坐标
-    const totalScale = scale0 * s
-    const srcX = (fx - visLeftX) / totalScale
-    const srcY = (fy - visLeftY) / totalScale
+    const totalScale = scale0 * scale
+    const srcX = (imgW * scale / 2 - frameW / 2 - tx) / totalScale
+    const srcY = (imgH * scale / 2 - frameH / 2 - ty) / totalScale
     const srcW = frameW / totalScale
     const srcH = frameH / totalScale
 
