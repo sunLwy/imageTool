@@ -71,8 +71,8 @@
     <button class="btn-outline recompress-btn" bindtap="resetResult">调整参数重新压缩</button>
   </view>
 
-  <!-- 功能介绍 -->
-  <view class="feature-card">
+  <!-- 功能介绍（未选图时显示） -->
+  <view class="feature-card" wx:if="{{!originalPath}}">
     <view class="feature-title">压缩功能说明</view>
     <view class="feature-item">✓ 一键压缩图片，减少文件体积</view>
     <view class="feature-item">✓ 按质量 / 按指定大小两种模式</view>

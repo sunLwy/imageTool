@@ -87,12 +87,17 @@ Page({
 
   // 进入编辑态
   enterEdit(src, w, h) {
+    // 保存最初的图片，用于"重置"还原旋转/比例/缩放
+    this.baseSrc = src
+    this.baseW = w
+    this.baseH = h
     this.setData({
       src,
       originW: w,
       originH: h,
       hasImage: true,
-      resultPath: ''
+      resultPath: '',
+      ratio: 'free'
     })
     this.layoutCrop()
     // 渲染后取舞台中心屏幕坐标，用于双指缩放锚点计算
@@ -274,8 +279,16 @@ Page({
     this.setData({ hasImage: false, src: '', resultPath: '' })
   },
 
-  // 重置：图片回到当前状态的初始位置与缩放（不还原旋转）
+  // 重置：还原到最初图片（撤销旋转、比例、缩放、拖动）
   resetView() {
+    if (!this.baseSrc) return
+    this.setData({
+      src: this.baseSrc,
+      originW: this.baseW,
+      originH: this.baseH,
+      ratio: 'free',
+      resultPath: ''
+    })
     this.layoutCrop()
   },
 

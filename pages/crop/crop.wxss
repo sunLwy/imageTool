@@ -204,6 +204,25 @@
   line-height: 80rpx;
 }
 
+/* 功能说明 */
+.feature-card {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  margin: 24rpx 0;
+}
+.feature-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+.feature-item {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 2;
+}
+
 .privacy-tip {
   font-size: 22rpx;
   color: #aaa;
