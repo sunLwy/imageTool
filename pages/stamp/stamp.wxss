@@ -188,3 +188,77 @@
   padding: 24rpx 0 60rpx;
   line-height: 1.6;
 }
+
+/* ===== 批量模式 ===== */
+.batch-head {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 24rpx 32rpx;
+  margin-bottom: 24rpx;
+  font-size: 26rpx;
+  color: #666;
+}
+.batch-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+}
+.batch-cell {
+  width: 31%;
+  margin-bottom: 20rpx;
+}
+.batch-thumb-wrap {
+  position: relative;
+  width: 100%;
+  height: 160rpx;
+  border-radius: 12rpx;
+  overflow: hidden;
+  background: #f0f0f0;
+}
+.batch-thumb {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.batch-status {
+  position: absolute;
+  right: 6rpx;
+  bottom: 6rpx;
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: 50%;
+  font-size: 20rpx;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.batch-status-done { background: #2ba471; }
+.batch-status-error { background: #e5484d; }
+.batch-date {
+  font-size: 20rpx;
+  color: #333;
+  text-align: center;
+  margin-top: 8rpx;
+  line-height: 1.3;
+}
+.batch-date.fallback {
+  color: #b8860b;
+}
+.batch-done-tip {
+  text-align: center;
+  color: #2ba471;
+  font-size: 28rpx;
+  padding: 24rpx 0 8rpx;
+  font-weight: 600;
+}
+.fb-tip {
+  font-size: 22rpx;
+  color: #999;
+  margin-top: 16rpx;
+  line-height: 1.5;
+}
