@@ -170,8 +170,9 @@ Page({
       // 画图片
       ctx.drawImage(image, 0, 0, width, height)
 
-      // 离屏Canvas用自己的toTempFilePath方法
-      canvas.toTempFilePath({
+      // 离屏Canvas用全局API导出
+      wx.canvasToTempFilePath({
+        canvas,
         fileType: 'jpg',
         quality: 0.9,
         success: (res) => {
@@ -217,6 +218,10 @@ Page({
 
   goAbout() {
     wx.navigateTo({ url: '/pages/about/about' })
+  },
+
+  goCrop() {
+    wx.navigateTo({ url: '/pages/crop/crop' })
   },
 
   // ============ 压缩入口 ============

@@ -15,6 +15,39 @@
   margin-top: 12rpx;
 }
 
+/* 工具入口宫格 */
+.tool-grid {
+  display: flex;
+  gap: 20rpx;
+  margin-bottom: 24rpx;
+}
+
+.tool-cell {
+  flex: 1;
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 28rpx 0;
+  text-align: center;
+  border: 2rpx solid transparent;
+}
+
+.tool-cell.active {
+  border-color: #4f7cff;
+  background: #eef2ff;
+}
+
+.tool-icon {
+  font-size: 44rpx;
+  line-height: 1;
+}
+
+.tool-name {
+  font-size: 26rpx;
+  color: #333;
+  margin-top: 12rpx;
+  font-weight: 500;
+}
+
 /* 选图区域 */
 .upload-area {
   background: #fff;

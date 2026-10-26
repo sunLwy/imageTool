@@ -1,0 +1,89 @@
+<view class="container">
+  <!-- 选图 -->
+  <view class="upload-area" bindtap="chooseImage" wx:if="{{!hasImage}}">
+    <view class="upload-icon">+</view>
+    <view class="upload-text">点击选择图片</view>
+    <view class="upload-tip">拖动、双指缩放调整裁剪位置</view>
+  </view>
+
+  <!-- 裁剪编辑器（普通页面流，保留小程序导航栏） -->
+  <block wx:if="{{hasImage && !resultPath}}">
+    <!-- 黑底裁剪舞台 -->
+    <view class="crop-stage" style="width:{{areaW}}px;height:{{areaW}}px;">
+      <movable-area class="crop-area"
+        style="width:{{bigSize}}px;height:{{bigSize}}px;left:{{bigOffset}}px;top:{{bigOffset}}px;">
+        <movable-view class="crop-movable" direction="all"
+          x="{{movableX}}" y="{{movableY}}"
+          scale scale-min="1" scale-max="5"
+          bindchange="onMove" bindscale="onScale"
+          bindtouchend="onTouchEnd" bindtouchcancel="onTouchEnd"
+          style="width:{{imgW}}px;height:{{imgH}}px;">
+          <image src="{{src}}" class="crop-image" mode="scaleToFill"
+            style="width:{{imgW}}px;height:{{imgH}}px;" />
+        </movable-view>
+      </movable-area>
+
+      <!-- 裁剪框：半透明遮罩 + 四角 L 标 + 三分网格 -->
+      <view class="crop-frame"
+        style="width:{{frameW}}px;height:{{frameH}}px;left:{{frameLeft}}px;top:{{frameTop}}px;">
+        <view class="corner tl"></view>
+        <view class="corner tr"></view>
+        <view class="corner bl"></view>
+        <view class="corner br"></view>
+        <view class="grid-v gv1"></view>
+        <view class="grid-v gv2"></view>
+        <view class="grid-h gh1"></view>
+        <view class="grid-h gh2"></view>
+      </view>
+    </view>
+
+    <!-- 比例横滑条 -->
+    <view class="ratio-card">
+      <scroll-view scroll-x class="ratio-scroll" enhanced show-scrollbar="{{false}}">
+        <view class="ratio-item {{ratio === item.value ? 'active' : ''}}"
+          wx:for="{{ratioOptions}}" wx:key="value"
+          bindtap="selectRatio" data-value="{{item.value}}">{{item.label}}</view>
+      </scroll-view>
+    </view>
+
+    <!-- 工具行 -->
+    <view class="tools-row">
+      <view class="tool-btn" bindtap="resetView">
+        <view class="tool-ico">↺</view>
+        <view class="tool-label">重置</view>
+      </view>
+      <view class="tool-btn" bindtap="rotateLeft">
+        <view class="tool-ico">⟳</view>
+        <view class="tool-label">旋转90°</view>
+      </view>
+      <view class="tool-btn" bindtap="chooseImage">
+        <view class="tool-ico">⇄</view>
+        <view class="tool-label">换图</view>
+      </view>
+    </view>
+
+    <!-- 主按钮 -->
+    <button class="btn-primary done-btn" bindtap="doCrop" loading="{{cropping}}" disabled="{{cropping}}">
+      {{cropping ? '裁剪中...' : '完成裁剪'}}
+    </button>
+    <view class="cancel-link" bindtap="cancelEdit">取消</view>
+  </block>
+
+  <!-- 结果 -->
+  <view class="image-card result-card" wx:if="{{resultPath}}">
+    <view class="result-badge">裁剪完成</view>
+    <image src="{{resultPath}}" mode="widthFix" class="preview-image" />
+    <view class="info-row">
+      <text class="info-label">结果</text>
+      <text class="info-value">{{resultSize}}</text>
+    </view>
+    <button class="btn-primary save-btn" bindtap="saveImage" loading="{{saving}}" disabled="{{saving}}">
+      {{saving ? '保存中...' : '保存到相册'}}
+    </button>
+    <button class="btn-outline recompress-btn" bindtap="resetEdit">继续编辑</button>
+  </view>
+
+  <view class="privacy-tip" wx:if="{{!hasImage || resultPath}}">
+    所有图片均在手机本地处理，不会上传到任何服务器
+  </view>
+</view>
