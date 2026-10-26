@@ -1,0 +1,92 @@
+<view class="container">
+  <!-- 选图 -->
+  <view class="upload-area" bindtap="chooseImage" wx:if="{{!hasImage}}">
+    <view class="upload-icon">📅</view>
+    <view class="upload-text">点击选择照片</view>
+    <view class="upload-tip">自动读取拍摄时间，添加日期戳</view>
+  </view>
+
+  <!-- 功能说明（未选图时显示） -->
+  <view class="feature-card" wx:if="{{!hasImage}}">
+    <view class="feature-title">时间水印功能说明</view>
+    <view class="feature-item">✓ 自动读取照片 EXIF 拍摄日期与时间</view>
+    <view class="feature-item">✓ 经典冲印 / 简约两种时间戳样式</view>
+    <view class="feature-item">✓ 日期或日期+时间，四角位置可选</view>
+    <view class="feature-item">✓ 识别不到可手动选日期，本地处理不上传</view>
+  </view>
+
+  <!-- 编辑区 -->
+  <block wx:if="{{hasImage}}">
+    <!-- 预览 -->
+    <view class="preview-card">
+      <image src="{{previewPath}}" mode="widthFix" class="preview-image" show-menu-by-longpress="{{false}}" />
+    </view>
+
+    <!-- 日期来源 -->
+    <view class="opt-card">
+      <view class="opt-row">
+        <text class="opt-label">拍摄时间</text>
+        <view class="exif-tag {{exifDetected ? 'ok' : 'manual'}}">
+          {{exifDetected ? '已自动识别' : '手动设置'}}
+        </view>
+      </view>
+      <view class="date-row">
+        <picker mode="date" value="{{stampDate}}" bindchange="onDateChange" class="date-picker">
+          <view class="date-box">{{stampDate}}</view>
+        </picker>
+        <picker mode="time" value="{{stampTime}}" bindchange="onTimeChange" class="date-picker" wx:if="{{showTime}}">
+          <view class="date-box">{{stampTime}}</view>
+        </picker>
+      </view>
+    </view>
+
+    <!-- 样式 -->
+    <view class="opt-card">
+      <view class="opt-label">样式</view>
+      <view class="seg-row">
+        <view class="seg {{stampStyle === 'classic' ? 'active' : ''}}" bindtap="setStyle" data-value="classic">经典冲印</view>
+        <view class="seg {{stampStyle === 'minimal' ? 'active' : ''}}" bindtap="setStyle" data-value="minimal">简约</view>
+      </view>
+    </view>
+
+    <!-- 内容 -->
+    <view class="opt-card">
+      <view class="opt-label">内容</view>
+      <view class="seg-row">
+        <view class="seg {{!showTime ? 'active' : ''}}" bindtap="setFormat" data-value="date">仅日期</view>
+        <view class="seg {{showTime ? 'active' : ''}}" bindtap="setFormat" data-value="datetime">日期+时间</view>
+      </view>
+    </view>
+
+    <!-- 字号 -->
+    <view class="opt-card">
+      <view class="opt-label">字号</view>
+      <view class="seg-row">
+        <view class="seg {{fontSizeLevel === 's' ? 'active' : ''}}" bindtap="setFontSize" data-level="s">小</view>
+        <view class="seg {{fontSizeLevel === 'm' ? 'active' : ''}}" bindtap="setFontSize" data-level="m">中</view>
+        <view class="seg {{fontSizeLevel === 'l' ? 'active' : ''}}" bindtap="setFontSize" data-level="l">大</view>
+      </view>
+    </view>
+
+    <!-- 位置 -->
+    <view class="opt-card">
+      <view class="opt-label">位置</view>
+      <view class="pos-grid">
+        <view class="pos {{position === 'lt' ? 'active' : ''}}" bindtap="setPosition" data-value="lt">↖</view>
+        <view class="pos {{position === 'rt' ? 'active' : ''}}" bindtap="setPosition" data-value="rt">↗</view>
+        <view class="pos {{position === 'lb' ? 'active' : ''}}" bindtap="setPosition" data-value="lb">↙</view>
+        <view class="pos {{position === 'rb' ? 'active' : ''}}" bindtap="setPosition" data-value="rb">↘</view>
+      </view>
+    </view>
+
+    <button class="btn-primary save-btn" bindtap="saveImage" loading="{{saving}}" disabled="{{saving || rendering}}">
+      {{saving ? '保存中...' : '保存到相册'}}
+    </button>
+    <view class="reselect" bindtap="chooseImage">重新选择照片</view>
+    <view class="cancel-link" bindtap="cancelEdit">取消</view>
+  </block>
+
+  <view class="privacy-tip" wx:if="{{!hasImage}}">
+    所有图片均在手机本地处理，不会上传到任何服务器
+  </view>
+</view>

@@ -3,6 +3,7 @@
     "pages/index/index",
     "pages/compress/compress",
     "pages/crop/crop",
+    "pages/stamp/stamp",
     "pages/about/about"
   ],
   "window": {

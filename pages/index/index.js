@@ -14,6 +14,13 @@ Page({
         name: '裁剪旋转',
         desc: '自由裁剪 · 比例旋转',
         url: '/pages/crop/crop'
+      },
+      {
+        key: 'stamp',
+        icon: '📅',
+        name: '时间水印',
+        desc: '照片加拍摄日期',
+        url: '/pages/stamp/stamp'
       }
     ],
     showPrivacyModal: false
