@@ -1,7 +1,7 @@
 <view class="container">
   <!-- 选图区域 -->
   <view class="upload-area" bindtap="chooseImage" wx:if="{{!originalPath}}">
-    <view class="upload-icon">+</view>
+    <image class="upload-icon" src="/images/icon-add.png" mode="aspectFit" />
     <view class="upload-text">点击选择图片</view>
     <view class="upload-tip">支持 JPG / PNG / HEIC</view>
   </view>

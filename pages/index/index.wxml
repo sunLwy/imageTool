@@ -3,7 +3,7 @@
   <view class="grid">
     <view class="grid-cell" wx:for="{{tools}}" wx:key="key"
       bindtap="openTool" data-url="{{item.url}}">
-      <view class="cell-icon">{{item.icon}}</view>
+      <image class="cell-icon" src="{{item.icon}}" mode="aspectFit" />
       <view class="cell-name">{{item.name}}</view>
       <view class="cell-desc">{{item.desc}}</view>
     </view>

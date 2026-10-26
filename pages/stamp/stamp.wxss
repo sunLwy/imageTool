@@ -7,8 +7,10 @@
   text-align: center;
 }
 .upload-icon {
-  font-size: 96rpx;
-  line-height: 1;
+  width: 120rpx;
+  height: 120rpx;
+  margin: 0 auto 8rpx;
+  display: block;
 }
 .upload-text {
   font-size: 32rpx;

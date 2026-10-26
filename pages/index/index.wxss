@@ -18,8 +18,10 @@
   background: #f5f7ff;
 }
 .cell-icon {
-  font-size: 64rpx;
-  line-height: 1;
+  width: 84rpx;
+  height: 84rpx;
+  margin: 0 auto;
+  display: block;
 }
 .cell-name {
   font-size: 30rpx;

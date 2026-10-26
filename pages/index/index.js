@@ -3,21 +3,21 @@ Page({
     tools: [
       {
         key: 'compress',
-        icon: '🗜️',
+        icon: '/images/icon-compress.png',
         name: '图片压缩',
         desc: '减小体积 · 更快分享',
         url: '/pages/compress/compress'
       },
       {
         key: 'crop',
-        icon: '✂️',
+        icon: '/images/icon-crop.png',
         name: '裁剪旋转',
         desc: '自由裁剪 · 比例旋转',
         url: '/pages/crop/crop'
       },
       {
         key: 'stamp',
-        icon: '📅',
+        icon: '/images/icon-stamp.png',
         name: '时间水印',
         desc: '照片加拍摄日期',
         url: '/pages/stamp/stamp'
