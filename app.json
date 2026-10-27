@@ -4,6 +4,7 @@
     "pages/compress/compress",
     "pages/crop/crop",
     "pages/stamp/stamp",
+    "pages/gridcut/gridcut",
     "pages/about/about"
   ],
   "window": {

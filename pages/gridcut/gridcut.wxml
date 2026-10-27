@@ -1,0 +1,35 @@
+<view class="container">
+  <!-- 选图 -->
+  <view class="upload-area" bindtap="chooseImage" wx:if="{{!hasResult}}">
+    <image class="upload-icon" src="/images/icon-add.png" mode="aspectFit" />
+    <view class="upload-text">点击选择照片</view>
+    <view class="upload-tip">自动保留画面中间正方形，切成 9 张</view>
+  </view>
+
+  <view class="feature-card" wx:if="{{!hasResult}}">
+    <view class="feature-title">九宫格切图说明</view>
+    <view class="feature-item">✓ 自动取画面中间正方形区域</view>
+    <view class="feature-item">✓ 切成 3×3 共 9 张，顺序导出</view>
+    <view class="feature-item">✓ 朋友圈按顺序一次选 9 张即可拼回</view>
+    <view class="feature-item">✓ 本地处理不上传</view>
+  </view>
+
+  <!-- 结果 -->
+  <block wx:if="{{hasResult}}">
+    <view class="cut-grid">
+      <image wx:for="{{chunks}}" wx:key="index" src="{{item}}" mode="aspectFill" class="cut-cell" />
+    </view>
+    <view class="cut-tip">上面 9 张即为切好效果，保存后去朋友圈按顺序选择</view>
+
+    <button wx:if="{{!saved}}" class="btn-primary save-btn" bindtap="saveAll" loading="{{saving}}" disabled="{{saving || processing}}">
+      {{saving ? '保存中...' : '保存 9 张到相册'}}
+    </button>
+    <button wx:if="{{saved}}" class="btn-primary save-btn" bindtap="chooseImage">再切一张</button>
+    <view wx:if="{{!saved}}" class="reselect" bindtap="chooseImage">重新选择照片</view>
+    <view class="cancel-link" bindtap="reset">取消</view>
+  </block>
+
+  <view class="privacy-tip" wx:if="{{!hasResult}}">
+    所有图片均在手机本地处理，不会上传到任何服务器
+  </view>
+</view>

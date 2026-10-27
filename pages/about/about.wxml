@@ -1,12 +1,12 @@
 <view class="container">
   <view class="about-card">
     <view class="app-name">小胡轻图</view>
-    <view class="app-version">版本 1.2.0</view>
+    <view class="app-version">版本 1.3.0</view>
 
     <view class="section">
       <view class="section-title">关于我们</view>
       <view class="section-content">
-        一款免费的本地图片处理工具箱，提供图片压缩、裁剪旋转、时间水印等实用功能，帮你在分享、发送、冲印前快速处理好图片。所有处理都在你的手机本地完成。
+        一款免费的本地图片处理工具箱，提供图片压缩、裁剪旋转、时间水印、九宫格切图等实用功能，帮你在分享、发送、冲印前快速处理好图片。所有处理都在你的手机本地完成。
       </view>
     </view>
 
@@ -15,6 +15,7 @@
       <view class="feature-item">✓ 图片压缩：按质量或指定大小自动压缩</view>
       <view class="feature-item">✓ 裁剪旋转：自由裁剪、常用比例、旋转90°</view>
       <view class="feature-item">✓ 时间水印：自动读取拍摄时间，给照片加日期戳</view>
+      <view class="feature-item">✓ 九宫格切图：一张照片切成 9 张发朋友圈</view>
       <view class="feature-item">✓ HEIC/PNG 自动转 JPG 格式</view>
       <view class="feature-item">✓ 所有图片本地处理，不上传服务器</view>
     </view>

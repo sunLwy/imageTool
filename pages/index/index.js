@@ -21,6 +21,13 @@ Page({
         name: '时间水印',
         desc: '照片加拍摄日期',
         url: '/pages/stamp/stamp'
+      },
+      {
+        key: 'gridcut',
+        icon: '/images/icon-gridcut.png',
+        name: '九宫格切图',
+        desc: '一张照片切 9 张发圈',
+        url: '/pages/gridcut/gridcut'
       }
     ],
     showPrivacyModal: false

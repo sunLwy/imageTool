@@ -24,7 +24,7 @@
       <view class="modal-body">
         <view>欢迎使用小胡轻图。我们非常重视您的隐私：</view>
         <view style="height: 20rpx;"></view>
-        <view>1. 您选择的图片仅在您的手机本地进行压缩、裁剪、添加水印等处理，不会上传到任何服务器。</view>
+        <view>1. 您选择的图片仅在您的手机本地进行压缩、裁剪、加水印、切图等处理，不会上传到任何服务器。</view>
         <view style="height: 16rpx;"></view>
         <view>2. 我们需要访问您的相册来选择图片，以及保存处理后的图片到您的相册。</view>
         <view style="height: 16rpx;"></view>
