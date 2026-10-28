@@ -1,4 +1,5 @@
 const app = getApp()
+const { checkImageSafe, showRiskyTip, showUnavailableTip } = require('../../utils/security')
 
 Page({
   data: {
@@ -120,39 +121,50 @@ Page({
         const tempFile = res.tempFiles[0]
         const srcPath = tempFile.tempFilePath
 
-        // 先获取图片信息，判断格式
-        wx.getImageInfo({
-          src: srcPath,
-          success: (info) => {
-            // 非JPG格式（PNG/HEIC等）统一转JPG，不然wx.compressImage会报错
-            const isJpg = info.type === 'jpg' || info.type === 'jpeg'
+        // 内容安全检测：通过后再进入处理流程，违规图片直接拦截
+        wx.showLoading({ title: '检测中...', mask: true })
+        checkImageSafe(srcPath)
+          .then(() => {
+            wx.hideLoading()
+            // 先获取图片信息，判断格式
+            wx.getImageInfo({
+              src: srcPath,
+              success: (info) => {
+                // 非JPG格式（PNG/HEIC等）统一转JPG，不然wx.compressImage会报错
+                const isJpg = info.type === 'jpg' || info.type === 'jpeg'
 
-            if (!isJpg) {
-              wx.showLoading({ title: '格式转换中...' })
-              this.pngToJpg(srcPath, info.width, info.height, (jpgPath) => {
-                wx.hideLoading()
-                this.setData({
-                  originalPath: jpgPath,
-                  originalSizeBytes: tempFile.size,
-                  originalSize: this.formatSize(tempFile.size),
-                  originalWidth: info.width,
-                  originalHeight: info.height,
-                  compressedPath: ''
-                })
-              })
-            } else {
-              // 已经是JPG，直接用
-              this.setData({
-                originalPath: srcPath,
-                originalSizeBytes: tempFile.size,
-                originalSize: this.formatSize(tempFile.size),
-                originalWidth: info.width,
-                originalHeight: info.height,
-                compressedPath: ''
-              })
-            }
-          }
-        })
+                if (!isJpg) {
+                  wx.showLoading({ title: '格式转换中...' })
+                  this.pngToJpg(srcPath, info.width, info.height, (jpgPath) => {
+                    wx.hideLoading()
+                    this.setData({
+                      originalPath: jpgPath,
+                      originalSizeBytes: tempFile.size,
+                      originalSize: this.formatSize(tempFile.size),
+                      originalWidth: info.width,
+                      originalHeight: info.height,
+                      compressedPath: ''
+                    })
+                  })
+                } else {
+                  // 已经是JPG，直接用
+                  this.setData({
+                    originalPath: srcPath,
+                    originalSizeBytes: tempFile.size,
+                    originalSize: this.formatSize(tempFile.size),
+                    originalWidth: info.width,
+                    originalHeight: info.height,
+                    compressedPath: ''
+                  })
+                }
+              }
+            })
+          })
+          .catch((err) => {
+            wx.hideLoading()
+            if (err && err.risky) showRiskyTip()
+            else showUnavailableTip()
+          })
       }
     })
   },

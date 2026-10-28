@@ -1,3 +1,5 @@
+const { checkImageSafe, showRiskyTip, showUnavailableTip } = require('../../utils/security')
+
 Page({
   data: {
     hasImage: false,
@@ -65,22 +67,33 @@ Page({
       sourceType: ['album', 'camera'],
       success: (res) => {
         const src = res.tempFiles[0].tempFilePath
-        wx.getImageInfo({
-          src,
-          success: (info) => {
-            // 非 JPG（PNG/HEIC 等）先统一转 JPG，否则 canvas 解码会失败
-            const isJpg = info.type === 'jpg' || info.type === 'jpeg'
-            if (!isJpg) {
-              wx.showLoading({ title: '格式转换中...' })
-              this.toJpg(src, info.width, info.height, (jpgPath) => {
-                wx.hideLoading()
-                this.enterEdit(jpgPath, info.width, info.height)
-              })
-            } else {
-              this.enterEdit(src, info.width, info.height)
-            }
-          }
-        })
+        // 内容安全检测：通过后再进入编辑
+        wx.showLoading({ title: '检测中...', mask: true })
+        checkImageSafe(src)
+          .then(() => {
+            wx.hideLoading()
+            wx.getImageInfo({
+              src,
+              success: (info) => {
+                // 非 JPG（PNG/HEIC 等）先统一转 JPG，否则 canvas 解码会失败
+                const isJpg = info.type === 'jpg' || info.type === 'jpeg'
+                if (!isJpg) {
+                  wx.showLoading({ title: '格式转换中...' })
+                  this.toJpg(src, info.width, info.height, (jpgPath) => {
+                    wx.hideLoading()
+                    this.enterEdit(jpgPath, info.width, info.height)
+                  })
+                } else {
+                  this.enterEdit(src, info.width, info.height)
+                }
+              }
+            })
+          })
+          .catch((err) => {
+            wx.hideLoading()
+            if (err && err.risky) showRiskyTip()
+            else showUnavailableTip()
+          })
       }
     })
   },

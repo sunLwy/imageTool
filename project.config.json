@@ -47,6 +47,7 @@
   "libVersion": "3.0.0",
   "appid": "wx918d203b6ef99152",
   "projectname": "image-tool",
+  "cloudfunctionRoot": "cloudfunctions/",
   "condition": {},
   "editorSetting": {
     "tabSize": 2,

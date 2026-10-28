@@ -1,6 +1,8 @@
 // ============================================================
 // 九宫格切图：选图后直接在带 3×3 网格线的预览里拖动对齐，所见即所得，一键切 9 张保存
 // ============================================================
+const { checkImageSafe, showRiskyTip, showUnavailableTip } = require('../../utils/security')
+
 Page({
   data: {
     phase: 'pick',      // pick 选图 / editing 拖动对齐
@@ -30,7 +32,21 @@ Page({
       mediaType: ['image'],
       sourceType: ['album', 'camera'],
       sizeType: ['original'],
-      success: (res) => this.setupCrop(res.tempFiles[0].tempFilePath)
+      success: (res) => {
+        const path = res.tempFiles[0].tempFilePath
+        // 内容安全检测：通过后再进入切图预览
+        wx.showLoading({ title: '检测中...', mask: true })
+        checkImageSafe(path)
+          .then(() => {
+            wx.hideLoading()
+            this.setupCrop(path)
+          })
+          .catch((err) => {
+            wx.hideLoading()
+            if (err && err.risky) showRiskyTip()
+            else showUnavailableTip()
+          })
+      }
     })
   },
 

@@ -2,6 +2,7 @@
 // 照片时间水印：自动读取 EXIF 拍摄时间并绘制到照片（冲印日期戳）
 // 支持单张精细模式（选1张）与批量模式（选2-9张，统一参数）
 // ============================================================
+const { checkImageSafe, showRiskyTip, showUnavailableTip } = require('../../utils/security')
 
 // 从 JPEG 二进制解析 EXIF 拍摄时间(DateTimeOriginal)与方向(Orientation)
 function readExif(buffer) {
@@ -165,13 +166,33 @@ Page({
       sizeType: ['original'],
       success: (res) => {
         const paths = res.tempFiles.map((f) => f.tempFilePath)
-        if (paths.length === 1) {
-          this.enterSingle(paths[0])
-        } else {
-          this.enterBatch(paths)
-        }
+        this.safetyCheckAndEnter(paths)
       }
     })
+  },
+
+  // 单张/批量统一先做内容安全检测，全部通过再进入对应模式；任一违规整批中断
+  async safetyCheckAndEnter(paths) {
+    wx.showLoading({ title: '检测中...', mask: true })
+    for (let i = 0; i < paths.length; i++) {
+      try {
+        await checkImageSafe(paths[i])
+      } catch (err) {
+        wx.hideLoading()
+        if (err && err.risky) {
+          showRiskyTip(paths.length > 1 ? i + 1 : 0)
+        } else {
+          showUnavailableTip()
+        }
+        return
+      }
+    }
+    wx.hideLoading()
+    if (paths.length === 1) {
+      this.enterSingle(paths[0])
+    } else {
+      this.enterBatch(paths)
+    }
   },
 
   // ---------- 单张模式 ----------

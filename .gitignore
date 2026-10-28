@@ -1,0 +1,10 @@
+# 依赖目录
+node_modules/
+**/node_modules/
+
+# 云函数本地安装的依赖（部署时云端安装）
+cloudfunctions/**/node_modules/
+
+# 编辑器 / 系统缓存
+.DS_Store
+*.log
