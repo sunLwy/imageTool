@@ -37,46 +37,13 @@ Page({
 
     // 广告
     showBanner: false,
-    adUnitIds: app.globalData.adUnitIds,
-
-    // 隐私弹窗
-    showPrivacyModal: false
+    adUnitIds: app.globalData.adUnitIds
   },
 
   onLoad() {
     this.loadDailyLimit()
     this.initBannerAd()
     this.initRewardedAd()
-    this.checkPrivacyAgreement()
-  },
-
-  // ============ 隐私协议 ============
-  checkPrivacyAgreement() {
-    const agreed = wx.getStorageSync('privacyAgreed')
-    if (!agreed) {
-      this.setData({ showPrivacyModal: true })
-    }
-  },
-
-  agreePrivacy() {
-    wx.setStorageSync('privacyAgreed', true)
-    this.setData({ showPrivacyModal: false })
-    wx.showToast({ title: '欢迎使用', icon: 'success' })
-  },
-
-  rejectPrivacy() {
-    wx.showModal({
-      title: '需要同意隐私协议',
-      content: '不同意隐私协议将无法使用本小程序',
-      showCancel: false,
-      success: () => {
-        this.setData({ showPrivacyModal: true })
-      }
-    })
-  },
-
-  onPrivacyMaskTap() {
-    // 点击遮罩不关闭，必须点按钮
   },
 
   // ============ 每日次数（本地存储，按日期重置） ============

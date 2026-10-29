@@ -84,24 +84,4 @@
   <view class="privacy-tip">
     图片在手机本地处理，隐私安全有保障
   </view>
-
-  <!-- 隐私协议弹窗 -->
-  <view class="modal-mask" wx:if="{{showPrivacyModal}}" bindtap="onPrivacyMaskTap">
-    <view class="modal-content">
-      <view class="modal-title">隐私保护说明</view>
-      <view class="modal-body">
-        <view>欢迎使用小胡轻图。我们非常重视您的隐私：</view>
-        <view style="height: 20rpx;"></view>
-        <view>1. 您选择的图片在手机本地完成压缩处理，不会上传或存储到我们的服务器。</view>
-        <view style="height: 16rpx;"></view>
-        <view>2. 为进行内容安全检测，所选图片会生成缩略图提交微信官方图片安全接口，仅用于合规审核，检测完成后不做存储、不用于其他用途。</view>
-        <view style="height: 16rpx;"></view>
-        <view>3. 我们需要访问您的相册来选择图片，以及保存压缩后的图片到您的相册；除上述安全检测外，我们不收集、存储或分享您的个人信息或图片内容。</view>
-      </view>
-      <view class="modal-btns">
-        <button class="modal-btn-cancel" bindtap="rejectPrivacy">不同意</button>
-        <button class="modal-btn-confirm" bindtap="agreePrivacy">同意并继续</button>
-      </view>
-    </view>
-  </view>
 </view>
