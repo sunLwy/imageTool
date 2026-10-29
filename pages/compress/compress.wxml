@@ -85,9 +85,6 @@
     图片在手机本地完成处理，不存储到我们的服务器；仅生成缩略图提交微信官方安全接口做内容检测。
   </view>
 
-  <!-- 关于入口 -->
-  <view class="about-link" bindtap="goAbout">关于我们</view>
-
   <!-- 隐私协议弹窗 -->
   <view class="modal-mask" wx:if="{{showPrivacyModal}}" bindtap="onPrivacyMaskTap">
     <view class="modal-content">

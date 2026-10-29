@@ -284,14 +284,6 @@
   line-height: 1.6;
 }
 
-/* 关于入口 */
-.about-link {
-  text-align: center;
-  font-size: 24rpx;
-  color: #999;
-  padding: 16rpx 0 60rpx;
-}
-
 /* 隐私弹窗 */
 .modal-mask {
   position: fixed;

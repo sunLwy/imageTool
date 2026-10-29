@@ -228,10 +228,6 @@ Page({
     wx.pageScrollTo({ scrollTop: 0, duration: 300 })
   },
 
-  goAbout() {
-    wx.navigateTo({ url: '/pages/about/about' })
-  },
-
   // ============ 压缩入口 ============
   compressImage() {
     // 检查今日剩余次数（受总开关控制）
