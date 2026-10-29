@@ -201,15 +201,18 @@
 .batch-grid {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-between;
   background: #fff;
   border-radius: 24rpx;
   padding: 24rpx;
   margin-bottom: 24rpx;
 }
 .batch-cell {
-  width: 31%;
+  width: 32%;
+  margin-right: 2%;
   margin-bottom: 20rpx;
+}
+.batch-cell:nth-child(3n) {
+  margin-right: 0;
 }
 .batch-thumb-wrap {
   position: relative;
