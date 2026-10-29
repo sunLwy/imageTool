@@ -122,7 +122,7 @@ Page({
         const srcPath = tempFile.tempFilePath
 
         // 内容安全检测：通过后再进入处理流程，违规图片直接拦截
-        wx.showLoading({ title: '检测中...', mask: true })
+        wx.showLoading({ title: '安全检测中...', mask: true })
         checkImageSafe(srcPath)
           .then(() => {
             wx.hideLoading()

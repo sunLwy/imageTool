@@ -68,7 +68,7 @@ Page({
       success: (res) => {
         const src = res.tempFiles[0].tempFilePath
         // 内容安全检测：通过后再进入编辑
-        wx.showLoading({ title: '检测中...', mask: true })
+        wx.showLoading({ title: '安全检测中...', mask: true })
         checkImageSafe(src)
           .then(() => {
             wx.hideLoading()

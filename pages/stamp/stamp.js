@@ -173,7 +173,7 @@ Page({
 
   // 单张/批量统一先做内容安全检测，全部通过再进入对应模式；任一违规整批中断
   async safetyCheckAndEnter(paths) {
-    wx.showLoading({ title: '检测中...', mask: true })
+    wx.showLoading({ title: '安全检测中...', mask: true })
     for (let i = 0; i < paths.length; i++) {
       try {
         await checkImageSafe(paths[i])
