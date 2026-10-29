@@ -410,15 +410,10 @@ Page({
 
     // 如果还是占位符，不初始化（避免报错）
     if (!adUnitId || adUnitId.includes('xxxx')) {
-      console.log('激励视频广告位未配置，跳过初始化')
       return
     }
 
     this.rewardedVideoAd = wx.createRewardedVideoAd({ adUnitId })
-
-    this.rewardedVideoAd.onLoad(() => {
-      console.log('激励视频广告加载完成')
-    })
 
     this.rewardedVideoAd.onError((err) => {
       console.error('激励视频广告错误', err)
@@ -441,7 +436,6 @@ Page({
     const adUnitId = this.data.adUnitIds.bannerAd
 
     if (!adUnitId || adUnitId.includes('xxxx')) {
-      console.log('Banner广告位未配置，跳过')
       return
     }
 
