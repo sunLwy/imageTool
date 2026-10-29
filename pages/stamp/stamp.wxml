@@ -164,6 +164,6 @@
   </block>
 
   <view class="privacy-tip" wx:if="{{!hasImage && !batchMode}}">
-    图片在手机本地完成处理，不存储到我们的服务器；仅生成缩略图提交微信官方安全接口做内容检测
+    图片在手机本地处理，隐私安全有保障
   </view>
 </view>
