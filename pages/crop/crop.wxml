@@ -12,7 +12,7 @@
     <view class="feature-item">✓ 自由裁剪，拖动 / 双指缩放调整位置</view>
     <view class="feature-item">✓ 多种比例：方形、16:9、4:3、9:16 等</view>
     <view class="feature-item">✓ 一键旋转 90°，横竖照片都适用</view>
-    <view class="feature-item">✓ 本地处理不上传，裁剪后可保存相册</view>
+    <view class="feature-item">✓ 本地完成处理，裁剪后可保存相册</view>
   </view>
 
   <!-- 裁剪编辑器（普通页面流，保留小程序导航栏） -->
@@ -90,6 +90,6 @@
   </view>
 
   <view class="privacy-tip" wx:if="{{!hasImage || resultPath}}">
-    所有图片均在手机本地处理，不会上传到任何服务器
+    图片在手机本地完成处理，不存储到我们的服务器；仅生成缩略图提交微信官方安全接口做内容检测
   </view>
 </view>

@@ -6,7 +6,7 @@
     <view class="section">
       <view class="section-title">关于我们</view>
       <view class="section-content">
-        一款免费的本地图片处理工具箱，提供图片压缩、裁剪旋转、时间水印、九宫格切图等实用功能，帮你在分享、发送、冲印前快速处理好图片。所有处理都在你的手机本地完成。
+        一款免费的图片处理工具箱，提供图片压缩、裁剪旋转、时间水印、九宫格切图等实用功能，帮你在分享、发送、冲印前快速处理好图片。图片处理均在你的手机本地完成。
       </view>
     </view>
 
@@ -17,13 +17,13 @@
       <view class="feature-item">✓ 时间水印：自动读取拍摄时间，给照片加日期戳</view>
       <view class="feature-item">✓ 九宫格切图：一张照片切成 9 张发朋友圈</view>
       <view class="feature-item">✓ HEIC/PNG 自动转 JPG 格式</view>
-      <view class="feature-item">✓ 所有图片本地处理，不上传服务器</view>
+      <view class="feature-item">✓ 图片本地处理，不存储到我们的服务器</view>
     </view>
 
     <view class="section">
       <view class="section-title">隐私保护</view>
       <view class="section-content">
-        我们非常重视你的隐私安全。所有图片处理均在你的手机本地完成，不会上传到任何服务器，也不会收集你的任何个人信息。
+        我们非常重视你的隐私安全。图片处理均在你的手机本地完成，不会上传或存储到我们的服务器；为进行内容安全检测，所选图片会生成缩略图提交微信官方图片安全接口，仅用于合规审核，检测完成后不做存储、不用于其他用途。除上述安全检测外，我们不收集你的个人信息。
       </view>
     </view>
 

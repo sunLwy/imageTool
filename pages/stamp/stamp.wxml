@@ -12,7 +12,7 @@
     <view class="feature-item">✓ 自动读取照片 EXIF 拍摄日期与时间</view>
     <view class="feature-item">✓ 支持批量，一次最多 9 张统一处理</view>
     <view class="feature-item">✓ 经典冲印 / 简约两种时间戳样式</view>
-    <view class="feature-item">✓ 识别不到时自动用今天日期，本地处理不上传</view>
+    <view class="feature-item">✓ 识别不到时自动用今天日期，本地完成处理</view>
   </view>
 
   <!-- ============ 单张编辑区 ============ -->
@@ -164,6 +164,6 @@
   </block>
 
   <view class="privacy-tip" wx:if="{{!hasImage && !batchMode}}">
-    所有图片均在手机本地处理，不会上传到任何服务器
+    图片在手机本地完成处理，不存储到我们的服务器；仅生成缩略图提交微信官方安全接口做内容检测
   </view>
 </view>

@@ -11,7 +11,7 @@
     <view class="feature-item">✓ 自动取画面中间正方形区域</view>
     <view class="feature-item">✓ 竖图上下拖、横图左右拖微调保留位置</view>
     <view class="feature-item">✓ 网格线即切分位置，保存 9 张发朋友圈</view>
-    <view class="feature-item">✓ 本地处理不上传</view>
+    <view class="feature-item">✓ 本地完成处理，不存储到我们服务器</view>
   </view>
 
   <!-- 切图：可拖动大图 + 九宫格线，所见即所得 -->
@@ -38,6 +38,6 @@
   </block>
 
   <view class="privacy-tip" wx:if="{{phase === 'pick'}}">
-    所有图片均在手机本地处理，不会上传到任何服务器
+    图片在手机本地完成处理，不存储到我们的服务器；仅生成缩略图提交微信官方安全接口做内容检测
   </view>
 </view>
