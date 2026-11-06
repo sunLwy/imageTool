@@ -110,6 +110,21 @@ function getImageInfoP(path) {
 }
 
 Page({
+  // 转发给好友：落地页统一为首页，用户点开即可看到全部工具
+  onShareAppMessage() {
+    return {
+      title: '给照片加上拍摄日期，打印冲印前一目了然',
+      path: '/pages/index/index'
+    };
+  },
+
+  // 分享到朋友圈
+  onShareTimeline() {
+    return {
+      title: '给照片加上拍摄日期，打印冲印前一目了然'
+    };
+  },
+
   data: {
     // 单张模式
     hasImage: false,

@@ -1,3 +1,5 @@
 {
-  "navigationBarTitleText": "九宫格切图"
+  "navigationBarTitleText": "九宫格切图",
+  "enableShareAppMessage": true,
+  "enableShareTimeline": true
 }

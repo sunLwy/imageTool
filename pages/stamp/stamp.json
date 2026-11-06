@@ -1,3 +1,5 @@
 {
-  "navigationBarTitleText": "时间水印"
+  "navigationBarTitleText": "时间水印",
+  "enableShareAppMessage": true,
+  "enableShareTimeline": true
 }

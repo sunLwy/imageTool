@@ -2,6 +2,21 @@ const app = getApp()
 const { checkImageSafe, showRiskyTip, showUnavailableTip } = require('../../utils/security')
 
 Page({
+  // 转发给好友：落地页统一为首页，用户点开即可看到全部工具
+  onShareAppMessage() {
+    return {
+      title: '图片压缩：按质量或指定大小，HEIC/PNG 也能转 JPG',
+      path: '/pages/index/index'
+    };
+  },
+
+  // 分享到朋友圈
+  onShareTimeline() {
+    return {
+      title: '图片压缩：按质量或指定大小，HEIC/PNG 也能转 JPG'
+    };
+  },
+
   data: {
     // 原图
     originalPath: '',

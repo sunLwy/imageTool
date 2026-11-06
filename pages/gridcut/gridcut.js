@@ -4,6 +4,21 @@
 const { checkImageSafe, showRiskyTip, showUnavailableTip } = require('../../utils/security')
 
 Page({
+  // 转发给好友：落地页统一为首页，用户点开即可看到全部工具
+  onShareAppMessage() {
+    return {
+      title: '一张照片切 9 张，发朋友圈九宫格',
+      path: '/pages/index/index'
+    };
+  },
+
+  // 分享到朋友圈
+  onShareTimeline() {
+    return {
+      title: '一张照片切 9 张，发朋友圈九宫格'
+    };
+  },
+
   data: {
     phase: 'pick',      // pick 选图 / editing 拖动对齐
     cropPath: '',

@@ -1,4 +1,6 @@
 {
   "navigationBarTitleText": "图片裁剪",
-  "usingComponents": {}
+  "usingComponents": {},
+  "enableShareAppMessage": true,
+  "enableShareTimeline": true
 }

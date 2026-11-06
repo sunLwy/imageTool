@@ -1,6 +1,21 @@
 const { checkImageSafe, showRiskyTip, showUnavailableTip } = require('../../utils/security')
 
 Page({
+  // 转发给好友：落地页统一为首页，用户点开即可看到全部工具
+  onShareAppMessage() {
+    return {
+      title: '图片裁剪旋转，比例自由，手机上就能搞定',
+      path: '/pages/index/index'
+    };
+  },
+
+  // 分享到朋友圈
+  onShareTimeline() {
+    return {
+      title: '图片裁剪旋转，比例自由，手机上就能搞定'
+    };
+  },
+
   data: {
     hasImage: false,
     src: '',
