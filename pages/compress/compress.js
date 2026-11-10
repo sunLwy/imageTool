@@ -265,6 +265,21 @@ Page({
     wx.pageScrollTo({ scrollTop: 0, duration: 300 })
   },
 
+  // ============ 全屏预览 / 前后对比 ============
+  previewOriginal() {
+    if (!this.data.originalPath) return
+    wx.previewImage({ urls: [this.data.originalPath] })
+  },
+
+  // 结果页：先看原图再滑动到压缩图，方便对比画质
+  previewResult() {
+    if (!this.data.compressedPath) return
+    wx.previewImage({
+      current: this.data.compressedPath,
+      urls: [this.data.originalPath, this.data.compressedPath]
+    })
+  },
+
   // ============ 压缩入口 ============
   compressImage() {
     // 检查今日剩余次数（受总开关控制）
@@ -301,7 +316,10 @@ Page({
       quality: quality,
       success: (res) => {
         this.finishCompress(res.tempFilePath, (compressedBytes, savingPercent) => {
-          return `压缩完成，省了${savingPercent}%`
+          // 高质量档位可能压完反而变大：如实提示，不显示"省了-8%"
+          return savingPercent > 0
+            ? `压缩完成，省了${savingPercent}%`
+            : '压缩完成，体积未变小'
         })
       },
       fail: () => {
@@ -349,51 +367,117 @@ Page({
     })
   },
 
-  // 按目标大小自动迭代压缩
-  compressToTargetSize() {
+  // ============ 按目标大小压缩（两级策略） ============
+  // 第一级：当前分辨率下二分质量（约 4~7 次收敛，旧实现是 70→10 步进最多 13 次），
+  //        找"不超过目标"的最高画质——能达标时画质比旧实现更高
+  // 第二级：质量压到 10 仍超标 → 用 compressedWidth 降分辨率再来（报名照等极限场景），最多缩 3 轮
+  async compressToTargetSize() {
     // 优先用用户输入的自定义大小，否则用预设的
     const userInput = parseInt(this.data.customSize)
     const targetKB = (userInput && userInput > 0) ? userInput : this.data.targetSize
     const targetBytes = targetKB * 1024
-    let currentQuality = 70
 
-    const tryCompress = () => {
-      wx.compressImage({
-        src: this.data.originalPath,
-        quality: currentQuality,
-        success: (res) => {
-          const compressedPath = res.tempFilePath
-          const compressedBytes = this.getFileSize(compressedPath)
-
-          // 体积读取失败（结果文件异常）：统一错误出口并复位状态，不再卡死按钮
-          if (!compressedBytes) {
-            this.setData({ compressing: false })
-            wx.showToast({ title: '压缩失败，请重试', icon: 'none' })
-            return
-          }
-
-          if (compressedBytes <= targetBytes || currentQuality <= 10) {
-            // 达标了，或者质量已压到下限 10（与滑条 min 一致）
-            this.setData({ compressing: false })
-            this.finishCompress(compressedPath, (bytes) => {
-              return bytes <= targetBytes
-                ? `已压至${this.formatSize(bytes)}`
-                : `已到压缩极限，当前${this.formatSize(bytes)}`
-            })
-          } else {
-            // 还太大，降低5个质量再试（步长更细，更容易卡到目标）
-            currentQuality -= 5
-            tryCompress()
-          }
-        },
-        fail: () => {
-          this.setData({ compressing: false })
-          wx.showToast({ title: '压缩失败，请重试', icon: 'none' })
-        }
-      })
+    // 原图已经小于目标：无需压缩，如实提示（旧实现会白压一次甚至变大）
+    if (this.data.originalSizeBytes > 0 && this.data.originalSizeBytes <= targetBytes) {
+      this.setData({ compressing: false })
+      wx.showToast({ title: '原图已小于目标大小，无需压缩', icon: 'none' })
+      return
     }
 
-    tryCompress()
+    let attempt = 0
+
+    // 单次探测：指定质量 + 可选等比缩放；进度实时刷新到 loading
+    const probe = async (quality, scale) => {
+      attempt++
+      wx.showLoading({ title: `自动压缩中 (${attempt})`, mask: true })
+      return this.compressOnce(quality, scale)
+    }
+
+    // 在指定分辨率下二分质量，返回 { fit, smallest }
+    // fit: 达标的最高画质结果（可能为 null）；smallest: 全程体积最小的一次（兜底交付）
+    // quick: 降分辨率后的轮次先试高画质，命中就省掉整轮二分
+    const solve = async (scale, quick) => {
+      let lo = 10
+      let hi = 95
+      let fit = null
+      let smallest = null
+
+      if (quick) {
+        const first = await probe(85, scale)
+        if (first.bytes <= targetBytes) return { fit: first, smallest: first }
+        if (!smallest || first.bytes < smallest.bytes) smallest = first
+        hi = 75   // 高画质超标，二分上界收紧
+      }
+
+      while (lo <= hi) {
+        const mid = Math.floor((lo + hi) / 2)
+        const r = await probe(mid, scale)
+        if (!smallest || r.bytes < smallest.bytes) smallest = r
+        if (r.bytes <= targetBytes) {
+          fit = r
+          lo = mid + 1   // 达标 → 往上探更高画质
+        } else {
+          hi = mid - 1   // 超标 → 降画质
+        }
+      }
+      return { fit, smallest }
+    }
+
+    try {
+      let scale = 1
+      let outcome = null   // 最终交付 { r, ok }
+
+      for (let round = 0; round < 3; round++) {
+        const { fit, smallest } = await solve(scale, round > 0)
+        if (fit) {
+          outcome = { r: fit, ok: true }
+          break
+        }
+        // 质量到 10 仍超标：按体积差估算需要的缩放比（面积近似，留 10% 余量）
+        const need = Math.sqrt(targetBytes / smallest.bytes) * 0.9
+        const nextScale = Math.max(0.05, scale * need)
+        if (nextScale >= scale) {
+          outcome = { r: smallest, ok: false }
+          break
+        }
+        outcome = { r: smallest, ok: false }   // 先记着，下一轮可能达标
+        scale = nextScale
+      }
+
+      if (!outcome) {
+        outcome = { r: { path: this.data.originalPath, bytes: this.data.originalSizeBytes }, ok: false }
+      }
+
+      const tip = outcome.ok
+        ? `已压至${this.formatSize(outcome.r.bytes)}`
+        : `已到压缩极限，当前${this.formatSize(outcome.r.bytes)}`
+      this.finishCompress(outcome.r.path, () => tip)
+    } catch (e) {
+      wx.showToast({ title: '压缩失败，请重试', icon: 'none' })
+    } finally {
+      wx.hideLoading()
+      this.setData({ compressing: false })
+    }
+  },
+
+  // 单次压缩（按质量，可选等比缩放）→ Promise<{ path, bytes }>
+  compressOnce(quality, scale) {
+    return new Promise((resolve, reject) => {
+      const opts = { src: this.data.originalPath, quality }
+      if (scale && scale < 1) {
+        // 只传 compressedWidth，高度按原图比例自动缩放，避免宽高比失真
+        opts.compressedWidth = Math.max(1, Math.round(this.data.originalWidth * scale))
+      }
+      wx.compressImage({
+        ...opts,
+        success: (res) => {
+          const bytes = this.getFileSize(res.tempFilePath)
+          if (bytes > 0) resolve({ path: res.tempFilePath, bytes })
+          else reject(new Error('read size failed'))
+        },
+        fail: reject
+      })
+    })
   },
 
   // ============ 保存到相册 ============

@@ -210,6 +210,7 @@
 
 /* 结果卡片 */
 .result-card {
+  position: relative;   /* 徽章 position:absolute 的定位锚点，缺了会跑到页面右上角 */
   border: 2rpx solid #4f7cff;
 }
 
@@ -230,6 +231,14 @@
   color: #4f7cff;
   margin-top: 16rpx;
   font-weight: 500;
+}
+
+/* 全屏预览/对比提示 */
+.preview-hint {
+  font-size: 22rpx;
+  color: #aaa;
+  text-align: center;
+  margin-top: 12rpx;
 }
 
 /* 每日次数 */

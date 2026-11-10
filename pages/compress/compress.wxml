@@ -8,7 +8,7 @@
 
   <!-- 已选图：原图信息（压缩完成后隐藏，只显示结果） -->
   <view class="image-card" wx:if="{{originalPath && !compressedPath}}">
-    <image src="{{originalPath}}" mode="aspectFit" class="preview-image" />
+    <image src="{{originalPath}}" mode="aspectFit" class="preview-image" bindtap="previewOriginal" />
     <view class="info-row">
       <text class="info-label">原图</text>
       <text class="info-value">{{originalSize}} · {{originalWidth}}×{{originalHeight}}</text>
@@ -30,12 +30,12 @@
     </view>
     <view class="slider-tip" wx:if="{{compressMode === 'quality'}}">质量越高越清晰，文件越大</view>
 
-    <!-- 按大小模式：预设大小 -->
+    <!-- 按大小模式：预设大小（输入自定义值后取消预设高亮，避免"看着选了500KB实际用的自定义"） -->
     <view class="size-preset" wx:if="{{compressMode === 'targetSize'}}">
-      <view class="size-option {{targetSize === 200 ? 'active' : ''}}" bindtap="selectSize" data-size="200">200KB</view>
-      <view class="size-option {{targetSize === 500 ? 'active' : ''}}" bindtap="selectSize" data-size="500">500KB</view>
-      <view class="size-option {{targetSize === 1024 ? 'active' : ''}}" bindtap="selectSize" data-size="1024">1MB</view>
-      <view class="size-option {{targetSize === 2048 ? 'active' : ''}}" bindtap="selectSize" data-size="2048">2MB</view>
+      <view class="size-option {{!customSize && targetSize === 200 ? 'active' : ''}}" bindtap="selectSize" data-size="200">200KB</view>
+      <view class="size-option {{!customSize && targetSize === 500 ? 'active' : ''}}" bindtap="selectSize" data-size="500">500KB</view>
+      <view class="size-option {{!customSize && targetSize === 1024 ? 'active' : ''}}" bindtap="selectSize" data-size="1024">1MB</view>
+      <view class="size-option {{!customSize && targetSize === 2048 ? 'active' : ''}}" bindtap="selectSize" data-size="2048">2MB</view>
     </view>
     <view class="custom-size-row" wx:if="{{compressMode === 'targetSize'}}">
       <input class="custom-size-input" type="number" placeholder="自定义大小(KB)" value="{{customSize}}" bindinput="onCustomSizeInput" />
@@ -55,11 +55,12 @@
   <!-- 压缩结果 -->
   <view class="image-card result-card" wx:if="{{compressedPath}}">
     <view class="result-badge">压缩完成</view>
-    <image src="{{compressedPath}}" mode="aspectFit" class="preview-image" />
+    <image src="{{compressedPath}}" mode="aspectFit" class="preview-image" bindtap="previewResult" />
     <view class="info-row">
       <text class="info-label">压缩后</text>
       <text class="info-value">{{compressedSize}} · {{compressedWidth}}×{{compressedHeight}}</text>
     </view>
+    <view class="preview-hint">点击图片可放大，左右滑动对比压缩前后</view>
     <view class="saving-info" wx:if="{{savingPercent > 0}}">
       节省了 {{savingPercent}}% 空间
     </view>
