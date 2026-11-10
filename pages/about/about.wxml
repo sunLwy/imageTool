@@ -1,6 +1,6 @@
 <view class="container">
   <view class="about-card">
-    <view class="app-name">小胡轻图</view>
+    <view class="app-name">图小帮</view>
     <view class="app-version">版本 1.2.0</view>
 
     <view class="section">

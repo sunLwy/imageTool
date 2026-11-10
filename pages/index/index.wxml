@@ -22,7 +22,7 @@
     <view class="modal-content">
       <view class="modal-title">隐私保护说明</view>
       <view class="modal-body">
-        <view>欢迎使用小胡轻图。我们非常重视您的隐私：</view>
+        <view>欢迎使用图小帮。我们非常重视您的隐私：</view>
         <view style="height: 20rpx;"></view>
         <view>1. 您选择的图片在手机本地完成压缩、裁剪、加水印、切图等处理，不会上传或存储到我们的服务器。</view>
         <view style="height: 16rpx;"></view>
