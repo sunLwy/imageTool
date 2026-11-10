@@ -1,5 +1,9 @@
 const app = getApp()
 const { checkImageSafe, showRiskyTip, showUnavailableTip } = require('../../utils/security')
+const { readExifP } = require('../../utils/exif')
+
+// Canvas 重绘的最大边长：超限先等比缩小，避免大图建 48MB+ 位图导致低端机 OOM
+const MAX_CANVAS_EDGE = 2560
 
 Page({
   // 转发给好友：落地页统一为首页，用户点开即可看到全部工具
@@ -112,17 +116,29 @@ Page({
             wx.getImageInfo({
               src: srcPath,
               success: (info) => {
-                // 非JPG格式（PNG/HEIC等）统一转JPG，不然wx.compressImage会报错
-                const isJpg = info.type === 'jpg' || info.type === 'jpeg'
+                // JPG 判断用「扩展名 + type 双源」：
+                // 部分安卓基础库 getImageInfo 返回 type 为 undefined，
+                // 只看 type 会把普通 JPG 误判成非 JPG，白白走进 Canvas 重编码（有 OOM 风险）
+                const ext = (srcPath.split('?')[0].split('.').pop() || '').toLowerCase()
+                const isJpg = ['jpg', 'jpeg'].indexOf(ext) >= 0
+                  || info.type === 'jpg' || info.type === 'jpeg'
 
                 if (!isJpg) {
+                  // 非JPG格式（PNG/HEIC等）统一转JPG，不然wx.compressImage会报错
                   wx.showLoading({ title: '格式转换中...' })
                   this.pngToJpg(srcPath, info.width, info.height, (jpgPath) => {
                     wx.hideLoading()
+                    // 转码失败不再静默回退原图（原图必然压缩失败、用户无从知晓原因）
+                    if (!jpgPath) {
+                      wx.showToast({ title: '图片格式转换失败，请换一张试试', icon: 'none' })
+                      return
+                    }
+                    // 压缩比基准用转码后的 JPG 体积，避免 HEIC/PNG 场景"节省 xx%"虚高
+                    const convertedBytes = this.getFileSize(jpgPath) || tempFile.size
                     this.setData({
                       originalPath: jpgPath,
-                      originalSizeBytes: tempFile.size,
-                      originalSize: this.formatSize(tempFile.size),
+                      originalSizeBytes: convertedBytes,
+                      originalSize: this.formatSize(convertedBytes),
                       originalWidth: info.width,
                       originalHeight: info.height,
                       compressedPath: ''
@@ -139,6 +155,9 @@ Page({
                     compressedPath: ''
                   })
                 }
+              },
+              fail: () => {
+                wx.showToast({ title: '读取图片信息失败，请重试', icon: 'none' })
               }
             })
           })
@@ -151,35 +170,71 @@ Page({
     })
   },
 
-  // PNG转JPG（离屏Canvas）
-  pngToJpg(srcPath, width, height, callback) {
-    const canvas = wx.createOffscreenCanvas({ type: '2d', width, height })
-    const ctx = canvas.getContext('2d')
-    const image = canvas.createImage()
-
-    image.onload = () => {
-      // 先铺白底（透明部分变白）
-      ctx.fillStyle = '#ffffff'
-      ctx.fillRect(0, 0, width, height)
-      // 画图片
-      ctx.drawImage(image, 0, 0, width, height)
-
-      // 离屏Canvas用全局API导出
-      wx.canvasToTempFilePath({
-        canvas,
-        fileType: 'jpg',
-        quality: 0.9,
-        success: (res) => {
-          callback(res.tempFilePath)
-        },
-        fail: () => {
-          // 转失败就用原图
-          callback(srcPath)
-        }
-      })
+  // 读取本地文件体积（失败返回 0）
+  getFileSize(path) {
+    try {
+      const stats = wx.getFileSystemManager().statSync(path)
+      return stats.size || 0
+    } catch (e) {
+      return 0
     }
+  },
 
-    image.src = srcPath
+  // PNG/HEIC → JPG（离屏Canvas，带方向矫正与尺寸保护）
+  // 成功 callback(jpgPath)；失败 callback(null)，由调用方明确提示
+  pngToJpg(srcPath, width, height, callback) {
+    // 大图先等比缩到安全边长，防止原图尺寸直接建 Canvas 导致低端机 OOM
+    const scale = Math.min(1, MAX_CANVAS_EDGE / Math.max(width, height))
+    const drawW = Math.max(1, Math.round(width * scale))
+    const drawH = Math.max(1, Math.round(height * scale))
+
+    // 读 EXIF 方向：竖拍照片的像素是"横着存"的，Canvas 重绘不认 Orientation，
+    // 必须先按方向预旋转，否则转出来的照片会横躺
+    readExifP(srcPath).then((exif) => {
+      const orientation = exif.orientation || 1
+      const swap = orientation >= 5   // 5-8 需要 90° 类旋转，画布宽高互换
+      const canvasW = swap ? drawH : drawW
+      const canvasH = swap ? drawW : drawH
+
+      const canvas = wx.createOffscreenCanvas({ type: '2d', width: canvasW, height: canvasH })
+      const ctx = canvas.getContext('2d')
+      const image = canvas.createImage()
+
+      image.onload = () => {
+        // 先铺白底（透明部分变白），必须在设置变换矩阵前用单位矩阵画满画布
+        ctx.fillStyle = '#ffffff'
+        ctx.fillRect(0, 0, canvasW, canvasH)
+
+        // 按 EXIF Orientation 设置变换（1 为正常不需要）
+        switch (orientation) {
+          case 2: ctx.transform(-1, 0, 0, 1, drawW, 0); break
+          case 3: ctx.transform(-1, 0, 0, -1, drawW, drawH); break
+          case 4: ctx.transform(1, 0, 0, -1, 0, drawH); break
+          case 5: ctx.transform(0, 1, 1, 0, 0, 0); break
+          case 6: ctx.transform(0, 1, -1, 0, drawH, 0); break   // 手机竖拍最常见
+          case 7: ctx.transform(0, -1, -1, 0, drawH, drawW); break
+          case 8: ctx.transform(0, -1, 1, 0, 0, drawW); break
+        }
+        ctx.drawImage(image, 0, 0, drawW, drawH)
+
+        // 离屏Canvas用全局API导出
+        wx.canvasToTempFilePath({
+          canvas,
+          fileType: 'jpg',
+          quality: 0.9,
+          success: (res) => {
+            callback(res.tempFilePath)
+          },
+          fail: () => {
+            // 转失败回调 null，由调用方提示，不再静默回退原图
+            callback(null)
+          }
+        })
+      }
+
+      image.onerror = () => callback(null)
+      image.src = srcPath
+    })
   },
 
   // ============ 压缩设置 ============
@@ -245,36 +300,8 @@ Page({
       src: this.data.originalPath,
       quality: quality,
       success: (res) => {
-        const compressedPath = res.tempFilePath
-
-        wx.getFileInfo({
-          filePath: compressedPath,
-          success: (fileInfo) => {
-            wx.getImageInfo({
-              src: compressedPath,
-              success: (imgInfo) => {
-                const originalBytes = this.data.originalSizeBytes
-                const compressedBytes = fileInfo.size
-                const savingPercent = Math.round((1 - compressedBytes / originalBytes) * 100)
-
-                this.setData({
-                  compressedPath,
-                  compressedSizeBytes: compressedBytes,
-                  compressedSize: this.formatSize(compressedBytes),
-                  compressedWidth: imgInfo.width,
-                  compressedHeight: imgInfo.height,
-                  savingPercent
-                })
-
-                this.consumeDailyLimit()
-
-                wx.showToast({
-                  title: `压缩完成，省了${savingPercent}%`,
-                  icon: 'success'
-                })
-              }
-            })
-          }
+        this.finishCompress(res.tempFilePath, (compressedBytes, savingPercent) => {
+          return `压缩完成，省了${savingPercent}%`
         })
       },
       fail: () => {
@@ -282,6 +309,42 @@ Page({
       },
       complete: () => {
         this.setData({ compressing: false })
+      }
+    })
+  },
+
+  // 压缩结果落地：查体积、查尺寸、更新结果卡片
+  // 所有异步环节都有 fail 兜底，任何一步失败走统一错误出口，不会让按钮卡在"压缩中"
+  // tipFn(compressedBytes, savingPercent) 由两种压缩模式各自定制提示文案
+  finishCompress(compressedPath, tipFn) {
+    const compressedBytes = this.getFileSize(compressedPath)
+    if (!compressedBytes) {
+      wx.showToast({ title: '压缩失败，请重试', icon: 'none' })
+      return
+    }
+
+    wx.getImageInfo({
+      src: compressedPath,
+      success: (imgInfo) => {
+        const originalBytes = this.data.originalSizeBytes
+        const savingPercent = Math.round((1 - compressedBytes / originalBytes) * 100)
+
+        this.setData({
+          compressedPath,
+          compressedSizeBytes: compressedBytes,
+          compressedSize: this.formatSize(compressedBytes),
+          compressedWidth: imgInfo.width,
+          compressedHeight: imgInfo.height,
+          savingPercent
+        })
+
+        this.consumeDailyLimit()
+
+        wx.showToast({ title: tipFn(compressedBytes, savingPercent), icon: 'success' })
+      },
+      fail: () => {
+        // 结果文件读不出来（如临时文件被系统清理）：明确报错，而不是静默卡住
+        wx.showToast({ title: '压缩失败，请重试', icon: 'none' })
       }
     })
   },
@@ -300,46 +363,28 @@ Page({
         quality: currentQuality,
         success: (res) => {
           const compressedPath = res.tempFilePath
+          const compressedBytes = this.getFileSize(compressedPath)
 
-          wx.getFileInfo({
-            filePath: compressedPath,
-            success: (fileInfo) => {
-              const compressedBytes = fileInfo.size
+          // 体积读取失败（结果文件异常）：统一错误出口并复位状态，不再卡死按钮
+          if (!compressedBytes) {
+            this.setData({ compressing: false })
+            wx.showToast({ title: '压缩失败，请重试', icon: 'none' })
+            return
+          }
 
-              if (compressedBytes <= targetBytes || currentQuality <= 10) {
-                // 达标了，或者已经压到极限了（质量不能低于20）
-                wx.getImageInfo({
-                  src: compressedPath,
-                  success: (imgInfo) => {
-                    const originalBytes = this.data.originalSizeBytes
-                    const savingPercent = Math.round((1 - compressedBytes / originalBytes) * 100)
-
-                    this.setData({
-                      compressedPath,
-                      compressedSizeBytes: compressedBytes,
-                      compressedSize: this.formatSize(compressedBytes),
-                      compressedWidth: imgInfo.width,
-                      compressedHeight: imgInfo.height,
-                      savingPercent,
-                      compressing: false
-                    })
-
-                    this.consumeDailyLimit()
-
-                    const tip = compressedBytes <= targetBytes
-                      ? `已压至${this.formatSize(compressedBytes)}`
-                      : `已到压缩极限，当前${this.formatSize(compressedBytes)}`
-
-                    wx.showToast({ title: tip, icon: 'success' })
-                  }
-                })
-              } else {
-                // 还太大，降低5个质量再试（步长更细，更容易卡到目标）
-                currentQuality -= 5
-                tryCompress()
-              }
-            }
-          })
+          if (compressedBytes <= targetBytes || currentQuality <= 10) {
+            // 达标了，或者质量已压到下限 10（与滑条 min 一致）
+            this.setData({ compressing: false })
+            this.finishCompress(compressedPath, (bytes) => {
+              return bytes <= targetBytes
+                ? `已压至${this.formatSize(bytes)}`
+                : `已到压缩极限，当前${this.formatSize(bytes)}`
+            })
+          } else {
+            // 还太大，降低5个质量再试（步长更细，更容易卡到目标）
+            currentQuality -= 5
+            tryCompress()
+          }
         },
         fail: () => {
           this.setData({ compressing: false })
