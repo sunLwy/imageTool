@@ -25,7 +25,10 @@ exports.main = async (event, context) => {
     if (err && (err.errCode === 87014 || err.errno === 87014)) {
       return { safe: false, risky: true, errCode: 87014 }
     }
-    // 其他异常（网络、参数、额度等）交由前端判定为"检测不可用"
+    // 其他异常（网络、参数、额度等）打印到云函数日志，便于在云开发控制台定位
+    // 常见值：-1 系统繁忙（偶发，前端会自动重试）/ 45009 频率或每日额度超限（不重试）
+    console.error('imgSecCheck error:', err && (err.errCode || err.errno), err && err.errMsg)
+    // 交由前端判定为"检测不可用"
     return {
       safe: false,
       risky: false,
