@@ -45,3 +45,9 @@
   color: #666;
   line-height: 2;
 }
+
+.privacy-link {
+  font-size: 26rpx;
+  color: #4f7cff;
+  margin-top: 16rpx;
+}

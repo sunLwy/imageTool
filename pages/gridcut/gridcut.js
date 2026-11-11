@@ -2,6 +2,7 @@
 // 九宫格切图：选图后直接在带 3×3 网格线的预览里拖动对齐，所见即所得，一键切 9 张保存
 // ============================================================
 const { checkImageSafe, showRiskyTip, showUnavailableTip } = require('../../utils/security')
+const { ensurePrivacyReady, saveImageToAlbumP } = require('../../utils/privacy')
 
 Page({
   // 转发给好友：落地页统一为首页，用户点开即可看到全部工具
@@ -41,7 +42,15 @@ Page({
     this.setData({ areaSize: Math.round(info.windowWidth - padPx * 2) })
   },
 
+  // 先过官方隐私授权 gate（防分享卡片/搜一搜直达绕过首页弹窗），再进原有流程
   chooseImage() {
+    ensurePrivacyReady().then((ok) => {
+      if (!ok) return
+      this.doChooseImage()
+    })
+  },
+
+  doChooseImage() {
     wx.chooseMedia({
       count: 1,
       mediaType: ['image'],
@@ -184,29 +193,16 @@ Page({
     })
   },
 
+  // 统一走 utils/privacy：授权被拒时引导去设置并中止，其余失败只跳过该张
   async saveChunks(chunks) {
     let saved = 0
     for (let i = 0; i < chunks.length; i++) {
-      try {
-        await new Promise((resolve, reject) => {
-          wx.saveImageToPhotosAlbum({
-            filePath: chunks[i],
-            success: resolve,
-            fail: reject
-          })
-        })
+      const result = await saveImageToAlbumP(chunks[i])
+      if (result === 'ok') {
         saved++
-      } catch (e) {
-        if (e && e.errMsg && e.errMsg.indexOf('auth deny') >= 0) {
-          this.setData({ saving: false })
-          wx.showModal({
-            title: '提示',
-            content: '需要相册权限才能保存图片，请在设置中开启',
-            confirmText: '去设置',
-            success: (r) => { if (r.confirm) wx.openSetting() }
-          })
-          return
-        }
+      } else if (result === 'auth') {
+        this.setData({ saving: false })
+        return
       }
     }
     this.setData({ saving: false })

@@ -1,6 +1,7 @@
 const app = getApp()
 const { checkImageSafe, showRiskyTip, showUnavailableTip } = require('../../utils/security')
 const { readExifP } = require('../../utils/exif')
+const { ensurePrivacyReady, saveImageToAlbum } = require('../../utils/privacy')
 
 // Canvas 重绘的最大边长：超限先等比缩小，避免大图建 48MB+ 位图导致低端机 OOM
 const MAX_CANVAS_EDGE = 2560
@@ -98,7 +99,15 @@ Page({
   },
 
   // ============ 选图 ============
+  // 先过官方隐私授权 gate（防分享卡片/搜一搜直达绕过首页弹窗），再进原有流程
   chooseImage() {
+    ensurePrivacyReady().then((ok) => {
+      if (!ok) return
+      this.doChooseImage()
+    })
+  },
+
+  doChooseImage() {
     wx.chooseMedia({
       count: 1,
       mediaType: ['image'],
@@ -480,54 +489,12 @@ Page({
     })
   },
 
-  // ============ 保存到相册 ============
-  saveImage() {
+  // ============ 保存到相册（统一走 utils/privacy，含授权失败引导） ============
+  async saveImage() {
     if (!this.data.compressedPath) return
-
     this.setData({ saving: true })
-
-    wx.saveImageToPhotosAlbum({
-      filePath: this.data.compressedPath,
-      success: () => {
-        wx.showToast({ title: '已保存到相册', icon: 'success' })
-      },
-      fail: (err) => {
-        if (err.errMsg.includes('auth deny')) {
-          wx.showModal({
-            title: '需要相册权限',
-            content: '请在设置中允许保存到相册',
-            confirmText: '去设置',
-            success: (res) => {
-              if (res.confirm) {
-                wx.openSetting()
-              }
-            }
-          })
-        } else {
-          wx.showToast({ title: '保存失败', icon: 'none' })
-        }
-      },
-      complete: () => {
-        this.setData({ saving: false })
-      }
-    })
-  },
-
-  handleSaveFail(err) {
-    if (err.errMsg.includes('auth deny')) {
-      wx.showModal({
-        title: '需要相册权限',
-        content: '请在设置中允许保存到相册',
-        confirmText: '去设置',
-        success: (res) => {
-          if (res.confirm) {
-            wx.openSetting()
-          }
-        }
-      })
-    } else {
-      wx.showToast({ title: '保存失败', icon: 'none' })
-    }
+    await saveImageToAlbum(this.data.compressedPath)
+    this.setData({ saving: false })
   },
 
   // ============ 激励视频广告：看广告解锁无限次 ============

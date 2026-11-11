@@ -4,6 +4,7 @@
 // ============================================================
 const { checkImageSafe, showRiskyTip, showUnavailableTip } = require('../../utils/security')
 const { readExifP } = require('../../utils/exif')
+const { ensurePrivacyReady, saveImageToAlbum, saveImageToAlbumP } = require('../../utils/privacy')
 
 // 解析 EXIF 时间，识别不到用兜底（当天日期）
 function parseExifDate(exif, fbDate, fbTime) {
@@ -89,7 +90,15 @@ Page({
   },
 
   // ============ 选图（最多9张，原图保留EXIF） ============
+  // 先过官方隐私授权 gate（防分享卡片/搜一搜直达绕过首页弹窗），再进原有流程
   chooseImage() {
+    ensurePrivacyReady().then((ok) => {
+      if (!ok) return
+      this.doChooseImage()
+    })
+  },
+
+  doChooseImage() {
     wx.chooseMedia({
       count: 9,
       mediaType: ['image'],
@@ -376,26 +385,13 @@ Page({
     this.setData({ saving: true })
     let saved = 0
     for (let i = 0; i < okJobs.length; i++) {
-      try {
-        await new Promise((resolve, reject) => {
-          wx.saveImageToPhotosAlbum({
-            filePath: okJobs[i].outPath,
-            success: resolve,
-            fail: reject
-          })
-        })
+      // 统一走 utils/privacy：授权被拒时引导去设置并中止，其余失败只跳过该张
+      const result = await saveImageToAlbumP(okJobs[i].outPath)
+      if (result === 'ok') {
         saved++
-      } catch (e) {
-        if (e && e.errMsg && e.errMsg.indexOf('auth deny') >= 0) {
-          this.setData({ saving: false })
-          wx.showModal({
-            title: '提示',
-            content: '需要相册权限才能保存图片，请在设置中开启',
-            confirmText: '去设置',
-            success: (r) => { if (r.confirm) wx.openSetting() }
-          })
-          return
-        }
+      } else if (result === 'auth') {
+        this.setData({ saving: false })
+        return
       }
     }
     this.setData({ saving: false, batchSaved: true })
@@ -428,28 +424,12 @@ Page({
     this.render()
   },
 
-  // ============ 单张保存 ============
-  saveImage() {
+  // ============ 单张保存（统一走 utils/privacy，含授权失败引导） ============
+  async saveImage() {
     if (!this.data.previewPath) return
     this.setData({ saving: true })
-    wx.saveImageToPhotosAlbum({
-      filePath: this.data.previewPath,
-      success: () => {
-        this.setData({ saving: false })
-        wx.showToast({ title: '已保存到相册', icon: 'success' })
-      },
-      fail: (err) => {
-        this.setData({ saving: false })
-        if (err.errMsg && err.errMsg.indexOf('auth deny') >= 0) {
-          wx.showModal({
-            title: '提示',
-            content: '需要相册权限才能保存图片，请在设置中开启',
-            confirmText: '去设置',
-            success: (r) => { if (r.confirm) wx.openSetting() }
-          })
-        }
-      }
-    })
+    await saveImageToAlbum(this.data.previewPath)
+    this.setData({ saving: false })
   },
 
   cancelEdit() {

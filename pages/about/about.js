@@ -1,3 +1,5 @@
+const { openPrivacyContract } = require('../../utils/privacy')
+
 Page({
   // 转发给好友：落地页统一为首页，用户点开即可看到全部工具
   onShareAppMessage() {
@@ -12,5 +14,10 @@ Page({
     return {
       title: '图小帮｜免费图片处理工具箱'
     };
+  },
+
+  // 打开微信内置的《用户隐私保护指引》页面
+  viewPrivacyContract() {
+    openPrivacyContract()
   },
 })

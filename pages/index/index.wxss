@@ -117,3 +117,10 @@
   justify-content: center;
 }
 .modal-btn-confirm::after { border: none; }
+
+/* 弹窗内"查看完整指引"入口 */
+.privacy-link {
+  text-align: center;
+  font-size: 26rpx;
+  color: #4f7cff;
+}

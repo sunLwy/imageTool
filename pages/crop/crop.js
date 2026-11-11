@@ -1,4 +1,5 @@
 const { checkImageSafe, showRiskyTip, showUnavailableTip } = require('../../utils/security')
+const { ensurePrivacyReady, saveImageToAlbum } = require('../../utils/privacy')
 
 Page({
   // 转发给好友：落地页统一为首页，用户点开即可看到全部工具
@@ -75,7 +76,15 @@ Page({
   },
 
   // ============ 选图 ============
+  // 先过官方隐私授权 gate（防分享卡片/搜一搜直达绕过首页弹窗），再进原有流程
   chooseImage() {
+    ensurePrivacyReady().then((ok) => {
+      if (!ok) return
+      this.doChooseImage()
+    })
+  },
+
+  doChooseImage() {
     wx.chooseMedia({
       count: 1,
       mediaType: ['image'],
@@ -418,27 +427,12 @@ Page({
     image.src = this.data.src
   },
 
-  // ============ 保存 ============
-  saveImage() {
+  // ============ 保存（统一走 utils/privacy，含授权失败引导） ============
+  async saveImage() {
     if (!this.data.resultPath) return
     this.setData({ saving: true })
-    wx.saveImageToPhotosAlbum({
-      filePath: this.data.resultPath,
-      success: () => wx.showToast({ title: '已保存到相册', icon: 'success' }),
-      fail: (err) => {
-        if (err.errMsg.includes('auth deny')) {
-          wx.showModal({
-            title: '需要相册权限',
-            content: '请在设置中允许保存到相册',
-            confirmText: '去设置',
-            success: (r) => { if (r.confirm) wx.openSetting() }
-          })
-        } else {
-          wx.showToast({ title: '保存失败', icon: 'none' })
-        }
-      },
-      complete: () => this.setData({ saving: false })
-    })
+    await saveImageToAlbum(this.data.resultPath)
+    this.setData({ saving: false })
   },
 
   resetEdit() {
